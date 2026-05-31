@@ -1,0 +1,1 @@
+# invest-get rich

@@ -1,0 +1,23 @@
+# secrets
+.env
+*.env.local
+
+# data + logs (regenerable from sources)
+data/
+logs/
+*.db
+*.sqlite
+*.sqlite3
+
+# python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/

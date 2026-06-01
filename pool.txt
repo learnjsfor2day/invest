@@ -1,0 +1,733 @@
+====================
+一、AI 应用层
+====================
+
+通用 AI 助手 / 大模型应用：
+- OpenAI（未上市）
+- Anthropic（未上市）
+- Google / Alphabet（GOOGL）
+- Microsoft（MSFT）
+- Meta（META）
+- xAI（未上市）
+- Perplexity（未上市）
+
+企业 AI 软件：
+- Microsoft（MSFT）
+- Salesforce（CRM）
+- ServiceNow（NOW）
+- Adobe（ADBE）
+- Oracle（ORCL）
+- SAP（SAP）
+- Palantir（PLTR）
+- IBM（IBM）
+
+编程 AI：
+- Microsoft / GitHub（MSFT）
+- Cursor / Anysphere（未上市）
+- JetBrains（未上市）
+- Atlassian（TEAM）
+
+AI 搜索 / 信息流：
+- Google / Alphabet（GOOGL）
+- Microsoft（MSFT）
+- Perplexity（未上市）
+- Meta（META）
+
+AI 视频 / 图片 / 设计：
+- Adobe（ADBE）
+- Canva（未上市）
+- Runway（未上市）
+- Stability AI（未上市）
+- Midjourney（未上市）
+- OpenAI / Sora（未上市）
+
+AI 医疗 / 药物发现：
+- Tempus AI（TEM）
+- Recursion Pharmaceuticals（RXRX）
+- Schrödinger（SDGR）
+- Insilico Medicine（未上市）
+- AbCellera（ABCL）
+
+AI 金融 / 风控 / 数据：
+- Palantir（PLTR）
+- FICO（FICO）
+- Bloomberg（未上市）
+- FactSet（FDS）
+- S&P Global（SPGI）
+- MSCI（MSCI）
+
+AI 安防 / 政府：
+- Palantir（PLTR）
+- Axon（AXON）
+- Leidos（LDOS）
+- Booz Allen Hamilton（BAH）
+- CACI（CACI）
+
+====================
+二、大模型 / 基础模型层
+====================
+
+闭源大模型：
+- OpenAI（未上市）
+- Anthropic（未上市）
+- Google Gemini / Alphabet（GOOGL）
+- xAI（未上市）
+- Cohere（未上市）
+
+开源 / 半开源模型：
+- Meta / Llama（META）
+- Mistral AI（未上市）
+- Alibaba / Qwen（BABA / 9988.HK）
+- DeepSeek（未上市）
+- Moonshot AI / 月之暗面（未上市）
+- 智谱 AI（未上市）
+- 百川智能（未上市）
+
+多模态模型：
+- OpenAI（未上市）
+- Google / Alphabet（GOOGL）
+- Meta（META）
+- Adobe（ADBE）
+- Runway（未上市）
+
+企业私有模型 / 数据平台：
+- IBM（IBM）
+- Microsoft（MSFT）
+- Oracle（ORCL）
+- Palantir（PLTR）
+- Databricks（未上市）
+- Snowflake（SNOW）
+
+====================
+三、云服务 / AI 训练和推理平台
+====================
+
+公有云：
+- Microsoft Azure（MSFT）
+- Amazon AWS（AMZN）
+- Google Cloud（GOOGL）
+- Oracle Cloud（ORCL）
+- Alibaba Cloud（BABA / 9988.HK）
+- Tencent Cloud（TCEHY / 0700.HK）
+
+AI 云 / GPU 云：
+- CoreWeave（CRWV）
+- Lambda（未上市）
+- Crusoe（未上市）
+- Nebius（NBIS）
+- Applied Digital（APLD）
+- IREN（IREN）
+- Core Scientific（CORZ）
+
+企业云 / 数据云：
+- Oracle（ORCL）
+- IBM（IBM）
+- ServiceNow（NOW）
+- Snowflake（SNOW）
+- Databricks（未上市）
+
+中国云：
+- 阿里云（BABA / 9988.HK）
+- 腾讯云（TCEHY / 0700.HK）
+- 华为云（未上市）
+- 百度智能云（BIDU / 9888.HK）
+- 火山引擎 / 字节跳动（未上市）
+
+====================
+四、AI 加速芯片 / 核心算力
+====================
+
+GPU：
+- Nvidia（NVDA）
+- AMD（AMD）
+- Intel（INTC）
+
+ASIC / 定制 AI 芯片：
+- Broadcom（AVGO）
+- Marvell（MRVL）
+- Google TPU / Alphabet（GOOGL）
+- Amazon Trainium / Inferentia（AMZN）
+- Microsoft Maia（MSFT）
+
+AI 推理芯片：
+- Nvidia（NVDA）
+- AMD（AMD）
+- Qualcomm（QCOM）
+- Intel（INTC）
+- Apple（AAPL）
+- MediaTek / 联发科（2454.TW）
+
+中国 AI 芯片：
+- 寒武纪（688256.SH）
+- 海光信息（688041.SH）
+- 华为昇腾（未上市）
+- 壁仞科技（未上市）
+- 燧原科技（未上市）
+- 摩尔线程（未上市）
+
+边缘 AI 芯片：
+- Qualcomm（QCOM）
+- MediaTek / 联发科（2454.TW）
+- Ambarella（AMBA）
+- NXP（NXPI）
+- Renesas / 瑞萨（6723.T）
+
+====================
+五、AI PC 芯片 / NPU
+====================
+
+x86 AI PC 芯片：
+- Intel（INTC）
+- AMD（AMD）
+
+Arm AI PC 芯片：
+- Qualcomm Snapdragon X 系列（QCOM）
+- Apple M 系列（AAPL）
+- MediaTek / 联发科（2454.TW）
+
+PC GPU：
+- Nvidia（NVDA）
+- AMD（AMD）
+- Intel（INTC）
+
+NPU IP / 架构：
+- Arm（ARM）
+- Synopsys（SNPS）
+- Cadence（CDNS）
+- CEVA（CEVA）
+
+操作系统生态：
+- Microsoft Windows / Copilot+ PC（MSFT）
+- Apple macOS（AAPL）
+- Google ChromeOS（GOOGL）
+
+====================
+六、HBM / DRAM / NAND / SSD
+====================
+
+HBM 高带宽内存：
+- SK Hynix（000660.KS）
+- Samsung Electronics（三星电子，005930.KS）
+- Micron（MU）
+
+DRAM：
+- Samsung Electronics（005930.KS）
+- SK Hynix（000660.KS）
+- Micron（MU）
+- 南亚科技（2408.TW）
+- 华邦电（2344.TW）
+
+NAND / SSD：
+- Samsung Electronics（005930.KS）
+- Kioxia（285A.T / 285A.JP）
+- Western Digital / SanDisk（WDC）
+- Micron（MU）
+- SK Hynix / Solidigm（000660.KS）
+
+企业级 SSD 控制器：
+- Marvell（MRVL）
+- Silicon Motion / 慧荣（SIMO）
+- Phison / 群联（8299.TWO）
+
+====================
+七、先进封装 / CoWoS / Chiplet
+====================
+
+先进封装代工：
+- TSMC / 台积电（TSM / 2330.TW）
+- Amkor（AMKR）
+- ASE 日月光投控（ASX / 3711.TW）
+- Intel Foundry（INTC）
+- Samsung Electronics（005930.KS）
+
+CoWoS 供应链：
+- TSMC / 台积电（TSM / 2330.TW）
+- ASE 日月光（ASX / 3711.TW）
+- 京元电子（2449.TW）
+- 欣兴电子（3037.TW）
+- 南电（8046.TW）
+
+ABF 载板：
+- Ibiden（4062.T）
+- 欣兴电子（3037.TW）
+- 南电（8046.TW）
+- AT&S（ATS.VI）
+- 深南电路（002916.SZ）
+- 兴森科技（002436.SZ）
+
+玻璃基板 / 下一代基板：
+- Corning（GLW）
+- Intel（INTC）
+- Samsung Electro-Mechanics（三星电机，009150.KS）
+
+封装设备：
+- ASMPT（0522.HK）
+- BE Semiconductor / BESI（BESI.AS）
+- Kulicke & Soffa（KLIC）
+- DISCO（6146.T）
+- Tokyo Electron（8035.T）
+
+====================
+八、晶圆代工 / 逻辑制造
+====================
+
+最先进制程：
+- TSMC / 台积电（TSM / 2330.TW）
+- Samsung Foundry / Samsung Electronics（005930.KS）
+- Intel Foundry（INTC）
+
+成熟制程：
+- GlobalFoundries（GFS）
+- UMC / 联电（UMC / 2303.TW）
+- SMIC / 中芯国际（0981.HK / 688981.SH）
+- 华虹半导体（1347.HK / 688347.SH）
+
+AI 芯片主要代工：
+- TSMC / 台积电（TSM / 2330.TW）
+- Samsung Electronics（005930.KS）
+- Intel（INTC）
+
+====================
+九、半导体设备
+====================
+
+光刻机：
+- ASML（ASML）
+
+刻蚀：
+- Lam Research（LRCX）
+- Applied Materials（AMAT）
+- Tokyo Electron（8035.T）
+- 北方华创（002371.SZ）
+- 中微公司（688012.SH）
+
+薄膜沉积：
+- Applied Materials（AMAT）
+- Lam Research（LRCX）
+- Tokyo Electron（8035.T）
+- ASM International（ASMI.AS）
+
+离子注入：
+- Axcelis（ACLS）
+- Applied Materials（AMAT）
+
+清洗：
+- Screen Holdings（7735.T）
+- Tokyo Electron（8035.T）
+- 盛美上海（688082.SH）
+
+量测检测：
+- KLA（KLAC）
+- Onto Innovation（ONTO）
+- Nova（NVMI）
+- 中科飞测（688361.SH）
+- 精测电子（300567.SZ）
+
+CMP：
+- Applied Materials（AMAT）
+- Ebara（6361.T）
+- 华海清科（688120.SH）
+
+探针台 / 测试：
+- Teradyne（TER）
+- Advantest（6857.T）
+- FormFactor（FORM）
+- 长川科技（300604.SZ）
+- 华峰测控（688200.SH）
+
+====================
+十、半导体材料
+====================
+
+硅片：
+- Shin-Etsu Chemical / 信越化学（4063.T）
+- SUMCO（3436.T）
+- GlobalWafers / 环球晶圆（6488.TWO）
+- 沪硅产业（688126.SH）
+- TCL 中环（002129.SZ）
+
+光刻胶：
+- JSR（未上市/私有化后）
+- TOK / 东京应化（4186.T）
+- Shin-Etsu / 信越化学（4063.T）
+- 晶瑞电材（300655.SZ）
+- 彤程新材（603650.SH）
+
+电子特气：
+- Linde（LIN）
+- Air Liquide（AI.PA）
+- Air Products（APD）
+- 华特气体（688268.SH）
+- 金宏气体（688106.SH）
+
+CMP 材料：
+- Entegris（ENTG）
+- Cabot（CTO）
+- 安集科技（688019.SH）
+
+湿电子化学品：
+- Entegris（ENTG）
+- BASF（BAS.DE）
+- 江化微（603078.SH）
+- 格林达（603931.SH）
+
+靶材：
+- JX Advanced Metals（未单独上市）
+- Honeywell（HON）
+- 江丰电子（300666.SZ）
+- 有研新材（600206.SH）
+
+封装材料：
+- Ajinomoto / 味之素（2802.T）
+- Namics（未上市）
+- 华海诚科（688535.SH）
+
+====================
+十一、AI 服务器整机 / 机柜 / ODM
+====================
+
+品牌服务器厂：
+- Dell（DELL）
+- HPE（HPE）
+- Lenovo / 联想集团（0992.HK / LNVGY）
+- Supermicro（SMCI）
+- Cisco（CSCO）
+- Fujitsu（6702.T）
+- NEC（6701.T）
+
+中国服务器厂：
+- 浪潮信息（000977.SZ）
+- 新华三 / 紫光股份（000938.SZ）
+- 联想集团（0992.HK / LNVGY）
+- 中兴通讯（000063.SZ / 0763.HK）
+- 中科曙光（603019.SH）
+- 神州数码（000034.SZ）
+
+ODM / 代工：
+- Quanta / 广达（2382.TW）
+- Wiwynn / 纬颖（6669.TW）
+- Wistron / 纬创（3231.TW）
+- Inventec / 英业达（2356.TW）
+- Foxconn / 鸿海（2317.TW）
+- Pegatron / 和硕（4938.TW）
+- Jabil（JBL）
+- Flex（FLEX）
+
+A股 AI 服务器链：
+- 工业富联（601138.SH）
+- 浪潮信息（000977.SZ）
+- 中科曙光（603019.SH）
+- 紫光股份（000938.SZ）
+- 神州数码（000034.SZ）
+- 拓维信息（002261.SZ）
+
+AI 机柜 / Rack-scale：
+- Dell（DELL）
+- Supermicro（SMCI）
+- Quanta / 广达（2382.TW）
+- Wiwynn / 纬颖（6669.TW）
+- Foxconn / 鸿海（2317.TW）
+- Lenovo / 联想集团（0992.HK / LNVGY）
+
+====================
+十二、主板 / PCB / 连接器 / 高速线缆
+====================
+
+PCB：
+- 沪电股份（002463.SZ）
+- 深南电路（002916.SZ）
+- 景旺电子（603228.SH）
+- 胜宏科技（300476.SZ）
+- 健鼎科技（3044.TW）
+- 臻鼎科技（4958.TW）
+- TTM Technologies（TTMI）
+
+高速连接器：
+- Amphenol（APH）
+- TE Connectivity（TEL）
+- Molex（Koch 私有）
+- 立讯精密（002475.SZ）
+- 沃尔核材（002130.SZ）
+- 鼎通科技（688668.SH）
+
+高速线缆 DAC / AEC：
+- Amphenol（APH）
+- TE Connectivity（TEL）
+- Credo Technology（CRDO）
+- 立讯精密（002475.SZ）
+- 兆龙互连（300913.SZ）
+- 沃尔核材（002130.SZ）
+
+背板 / 高速互连：
+- Amphenol（APH）
+- TE Connectivity（TEL）
+- Samtec（未上市）
+- Molex（Koch 私有）
+
+====================
+十三、网络芯片 / 交换机 / 光模块
+====================
+
+以太网交换芯片：
+- Broadcom（AVGO）
+- Marvell（MRVL）
+- Nvidia（NVDA）
+
+网卡 / DPU：
+- Nvidia（NVDA）
+- Broadcom（AVGO）
+- Marvell（MRVL）
+- Intel（INTC）
+
+交换机设备：
+- Arista Networks（ANET）
+- Cisco（CSCO）
+- Juniper Networks（JNPR，HPE 收购相关）
+- HPE（HPE）
+- Nvidia（NVDA）
+- Accton / 智邦科技（2345.TW）
+- 锐捷网络（301165.SZ）
+- 新华三 / 紫光股份（000938.SZ）
+
+光模块：
+- Coherent（COHR）
+- Lumentum（LITE）
+- Fabrinet（FN）
+- 中际旭创（300308.SZ）
+- 新易盛（300502.SZ）
+- 天孚通信（300394.SZ）
+- 光迅科技（002281.SZ）
+- 剑桥科技（603083.SH）
+
+光芯片 / 激光器：
+- Coherent（COHR）
+- Lumentum（LITE）
+- Broadcom（AVGO）
+- 源杰科技（688498.SH）
+- 仕佳光子（688313.SH）
+
+CPO / 硅光：
+- Broadcom（AVGO）
+- Marvell（MRVL）
+- Intel（INTC）
+- TSMC / 台积电（TSM / 2330.TW）
+- Coherent（COHR）
+- Ayar Labs（未上市）
+- Celestial AI（未上市）
+
+====================
+十四、电源 / UPS / 配电 / 变压器
+====================
+
+UPS / 电源管理：
+- Vertiv（VRT）
+- Schneider Electric（SU.PA）
+- Eaton（ETN）
+- Delta Electronics / 台达电（2308.TW）
+- 英维克（002837.SZ）
+
+配电 / 低压电气：
+- Schneider Electric（SU.PA）
+- Eaton（ETN）
+- ABB（ABB）
+- Siemens（SIE.DE）
+- 正泰电器（601877.SH）
+- 良信股份（002706.SZ）
+
+变压器：
+- Eaton（ETN）
+- Siemens Energy（ENR.DE）
+- Hitachi Energy（隶属 Hitachi，6501.T）
+- GE Vernova（GEV）
+- 特变电工（600089.SH）
+- 金盘科技（688676.SH）
+- 华明装备（002270.SZ）
+
+发电设备：
+- GE Vernova（GEV）
+- Caterpillar（CAT）
+- Cummins（CMI）
+- Mitsubishi Heavy Industries / 三菱重工（7011.T）
+
+电网设备：
+- ABB（ABB）
+- Siemens Energy（ENR.DE）
+- Hitachi（6501.T）
+- 国电南瑞（600406.SH）
+- 许继电气（000400.SZ）
+- 平高电气（600312.SH）
+
+====================
+十五、液冷 / 散热 / 机房温控
+====================
+
+数据中心液冷：
+- Vertiv（VRT）
+- Schneider Electric（SU.PA）
+- CoolIT Systems（未上市）
+- Asetek（ASTK.CO）
+- 英维克（002837.SZ）
+- 高澜股份（300499.SZ）
+- 申菱环境（301018.SZ）
+
+冷板 / CDU：
+- Vertiv（VRT）
+- CoolIT Systems（未上市）
+- Asetek（ASTK.CO）
+- 英维克（002837.SZ）
+- 飞荣达（300602.SZ）
+
+热管理材料：
+- 3M（MMM）
+- Henkel（HEN3.DE）
+- Laird / DuPont 相关生态
+- 飞荣达（300602.SZ）
+- 中石科技（300684.SZ）
+
+空调 / 温控：
+- Vertiv（VRT）
+- Schneider Electric（SU.PA）
+- 英维克（002837.SZ）
+- 佳力图（603912.SH）
+- 申菱环境（301018.SZ）
+
+浸没式液冷：
+- Submer（未上市）
+- GRC / Green Revolution Cooling（未上市）
+- 3M（MMM）相关材料生态
+
+====================
+十六、数据中心建设 / REITs / 工程
+====================
+
+数据中心运营：
+- Equinix（EQIX）
+- Digital Realty（DLR）
+- GDS / 万国数据（GDS / 9698.HK）
+- Keppel DC REIT（AJBU.SI）
+
+云数据中心建设方：
+- Microsoft（MSFT）
+- Amazon（AMZN）
+- Google / Alphabet（GOOGL）
+- Meta（META）
+- Oracle（ORCL）
+
+工程建设：
+- Quanta Services（PWR）
+- EMCOR（EME）
+- Jacobs（J）
+- Fluor（FLR）
+- 中国建筑（601668.SH）
+- 中国电建（601669.SH）
+
+机房基础设施：
+- Vertiv（VRT）
+- Schneider Electric（SU.PA）
+- Eaton（ETN）
+- ABB（ABB）
+
+土地 / 能源资源型：
+- Talen Energy（TLN）
+- Constellation Energy（CEG）
+- Vistra（VST）
+- NextEra Energy（NEE）
+
+====================
+十七、AI PC / 终端硬件
+====================
+
+PC 品牌：
+- Lenovo / 联想集团（0992.HK / LNVGY）
+- HP（HPQ）
+- Dell（DELL）
+- Apple（AAPL）
+- Asus / 华硕（2357.TW）
+- Acer / 宏碁（2353.TW）
+- Microsoft Surface（MSFT）
+
+CPU / NPU：
+- Intel（INTC）
+- AMD（AMD）
+- Qualcomm（QCOM）
+- Apple（AAPL）
+- MediaTek / 联发科（2454.TW）
+
+操作系统：
+- Microsoft Windows / Copilot+ PC（MSFT）
+- Apple macOS（AAPL）
+- Google ChromeOS（GOOGL）
+
+内存 / SSD：
+- Micron（MU）
+- Samsung Electronics（005930.KS）
+- SK Hynix（000660.KS）
+- Western Digital（WDC）
+- Kioxia（285A.T / 285A.JP）
+
+电池 / 结构件 / 声学：
+- 新普科技（6121.TW）
+- 顺达科技（3211.TW）
+- 立讯精密（002475.SZ）
+- 歌尔股份（002241.SZ）
+- 比亚迪电子（0285.HK）
+
+面板：
+- 京东方 A（000725.SZ）
+- TCL 科技 / TCL 华星（000100.SZ）
+- LG Display（LPL）
+- Samsung Display（三星电子体系，005930.KS）
+- 群创光电（3481.TW）
+- 友达光电（AUOTY / 2409.TW）
+
+PC ODM：
+- Quanta / 广达（2382.TW）
+- Compal / 仁宝（2324.TW）
+- Wistron / 纬创（3231.TW）
+- Inventec / 英业达（2356.TW）
+- Foxconn / 鸿海（2317.TW）
+
+====================
+十八、能源 / 铜 / 原材料
+====================
+
+电力公司：
+- Constellation Energy（CEG）
+- Vistra（VST）
+- NextEra Energy（NEE）
+- Duke Energy（DUK）
+- Southern Company（SO）
+
+核电：
+- Constellation Energy（CEG）
+- Cameco（CCJ）
+- BWX Technologies（BWXT）
+- Oklo（OKLO）
+- NuScale Power（SMR）
+
+天然气发电 / 设备：
+- GE Vernova（GEV）
+- Caterpillar（CAT）
+- Cummins（CMI）
+- Kinder Morgan（KMI）
+- Williams Companies（WMB）
+
+铜：
+- Freeport-McMoRan（FCX）
+- Southern Copper（SCCO）
+- 紫金矿业（601899.SH / 2899.HK）
+- 洛阳钼业（603993.SH / 3993.HK）
+- 江西铜业（600362.SH / 0358.HK）
+
+稀土 / 磁材：
+- MP Materials（MP）
+- Lynas Rare Earths（LYC.AX）
+- 北方稀土（600111.SH）
+- 金力永磁（300748.SZ / 6680.HK）
+- 中科三环（000970.SZ）
+
+光纤材料 / 通信材料：
+- Corning（GLW）
+- 长飞光纤（601869.SH / 6869.HK）
+- 亨通光电（600487.SH）
+- 中天科技（600522.SH）

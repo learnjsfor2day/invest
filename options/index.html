@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>期权决策器</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+    background: #f5f5f7;
+    color: #1d1d1f;
+    margin: 0;
+    padding: 20px;
+    line-height: 1.5;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+  h1 { font-size: 24px; margin: 0 0 6px 0; }
+  .subtitle { color: #666; font-size: 14px; margin-bottom: 16px; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e5e5e7;
+  }
+  .tab {
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #666;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    font-weight: 500;
+  }
+  .tab.active {
+    color: #0071e3;
+    border-bottom-color: #0071e3;
+  }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* Account bar */
+  .account-bar {
+    background: #1d1d1f;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+  }
+  .account-bar input {
+    background: #2d2d2f;
+    color: white;
+    border: 1px solid #444;
+    padding: 4px 8px;
+    border-radius: 4px;
+    width: 120px;
+    font-size: 13px;
+  }
+
+  /* Layout */
+  .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; }
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    margin-bottom: 16px;
+  }
+  .card h2 { font-size: 16px; margin: 0 0 16px 0; color: #1d1d1f; }
+  .card h3 { font-size: 14px; margin: 16px 0 10px 0; color: #555; }
+
+  /* Inputs */
+  label { display: block; font-size: 13px; color: #555; margin: 12px 0 6px; }
+  label .hint { color: #999; font-size: 11px; margin-left: 4px; }
+  input, select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #d2d2d7;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  input:focus, select:focus { outline: none; border-color: #0071e3; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+  /* Slider */
+  .slider-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  input[type="range"] {
+    padding: 0;
+    -webkit-appearance: none;
+    height: 6px;
+    background: #e5e5e7;
+    border-radius: 3px;
+    flex: 1;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    background: #0071e3;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .slider-value {
+    font-weight: 600;
+    min-width: 36px;
+    text-align: right;
+    font-size: 13px;
+  }
+
+  /* Buttons */
+  button {
+    background: #0071e3;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 8px;
+    width: 100%;
+    font-weight: 500;
+  }
+  button:hover { background: #0077ed; }
+  button.secondary { background: #e8e8ed; color: #1d1d1f; }
+  button.secondary:hover { background: #dcdce0; }
+
+  /* Stat cards */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .stat-grid.three { grid-template-columns: repeat(3, 1fr); }
+  .stat {
+    background: #f5f5f7;
+    padding: 12px;
+    border-radius: 8px;
+  }
+  .stat .label { font-size: 11px; color: #666; }
+  .stat .value { font-size: 18px; font-weight: 600; margin-top: 4px; }
+  .stat .small { font-size: 11px; color: #888; margin-top: 2px; }
+  .stat.green .value { color: #0a7d3e; }
+  .stat.red .value { color: #c41e3a; }
+  .stat.blue .value { color: #0071e3; }
+  .stat.yellow .value { color: #b45309; }
+
+  /* Greeks table */
+  .greeks-table {
+    display: grid;
+    grid-template-columns: 80px 1fr 80px 1fr;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .greek-name {
+    font-weight: 600;
+    color: #555;
+  }
+  .greek-value {
+    font-family: 'SF Mono', 'Monaco', monospace;
+    font-size: 13px;
+    text-align: right;
+    color: #1d1d1f;
+  }
+
+  /* Health indicators */
+  .health-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+  .health-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    font-size: 13px;
+  }
+  .health-green { background: #ecfdf5; }
+  .health-yellow { background: #fffbeb; }
+  .health-red { background: #fef2f2; }
+  .dot-green { background: #10b981; }
+  .dot-yellow { background: #f59e0b; }
+  .dot-red { background: #ef4444; }
+
+  /* Recommendation box */
+  .rec-box {
+    padding: 16px;
+    border-radius: 10px;
+    margin: 12px 0;
+    font-size: 14px;
+  }
+  .rec-buy { background: linear-gradient(135deg,#dcfce7,#a7f3d0); border:2px solid #10b981; }
+  .rec-wait { background: linear-gradient(135deg,#fef3c7,#fde68a); border:2px solid #f59e0b; }
+  .rec-skip { background: linear-gradient(135deg,#fee2e2,#fecaca); border:2px solid #ef4444; }
+  .rec-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+
+  .key-box {
+    background: #fffbeb;
+    border-left: 4px solid #f59e0b;
+    padding: 12px 14px;
+    border-radius: 6px;
+    margin-bottom: 14px;
+    font-size: 13px;
+  }
+  .key-box strong { color: #92400e; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 6px 10px; text-align: right; border-bottom: 1px solid #eee; }
+  th { background: #f5f5f7; font-weight: 600; color: #555; text-align: right; font-size: 12px; }
+  th:first-child, td:first-child { text-align: left; }
+  tr.highlight { background: #fef3c7; font-weight: 600; }
+  tr.profit-better td { color: #0a7d3e; }
+  tr.profit-worse td { color: #c41e3a; }
+
+  /* Positions */
+  .positions-list {
+    margin-top: 16px;
+    border-top: 1px solid #e5e5e7;
+    padding-top: 12px;
+  }
+  .pos-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    background: #f5f5f7;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .pos-item:hover { background: #ebebef; }
+  .pos-item .del {
+    color: #c41e3a;
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: auto;
+    margin: 0;
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  .empty-hint { color: #999; font-size: 13px; text-align: center; padding: 16px; }
+  .small { font-size: 12px; color: #888; margin-top: 4px; }
+  .footnote { font-size: 11px; color: #999; margin-top: 14px; line-height: 1.5; }
+
+  /* Scenario matrix */
+  .scenario-matrix th, .scenario-matrix td {
+    text-align: center;
+    font-family: 'SF Mono', 'Monaco', monospace;
+    font-size: 12px;
+    padding: 5px 6px;
+  }
+  .scenario-matrix .pnl-pos { color: #0a7d3e; }
+  .scenario-matrix .pnl-neg { color: #c41e3a; }
+
+  /* Info collapsible box */
+  .info-box {
+    background: #f0f6ff;
+    border: 1px solid #d6e4ff;
+    border-radius: 8px;
+    margin: 4px 0 12px 0;
+    font-size: 13px;
+  }
+  .info-box summary {
+    cursor: pointer;
+    padding: 8px 14px;
+    list-style: none;
+    font-weight: 500;
+    color: #0071e3;
+    user-select: none;
+    outline: none;
+  }
+  .info-box summary::-webkit-details-marker { display: none; }
+  .info-box summary::before {
+    content: '▶';
+    font-size: 9px;
+    margin-right: 8px;
+    display: inline-block;
+    transition: transform 0.2s;
+  }
+  .info-box[open] summary::before {
+    transform: rotate(90deg);
+  }
+  .info-box .info-content {
+    padding: 4px 14px 12px 14px;
+    color: #333;
+    line-height: 1.8;
+    border-top: 1px solid #d6e4ff;
+  }
+  .info-box .info-content strong {
+    color: #0071e3;
+    font-weight: 600;
+  }
+  .info-box .info-content .legend-table {
+    font-size: 12px;
+    margin: 6px 0;
+    width: 100%;
+  }
+  .info-box .info-content .legend-table td {
+    padding: 3px 8px;
+    border: none;
+    text-align: left;
+  }
+
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: 1fr; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>期权决策器</h1>
+  <div class="subtitle">买入决策 + 出场决策 一站式工具(本地运行,数据不外发)</div>
+
+  <div class="account-bar">
+    <span>💰 账户总额: $<input type="number" id="accountSize" step="1000" placeholder="50000"></span>
+    <span id="accountStatus" style="color:#10b981;"></span>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('buy')">📊 买入决策</div>
+    <div class="tab" onclick="switchTab('exit')">💰 出场决策</div>
+  </div>
+
+  <!-- ============== BUY MODE ============== -->
+  <div id="buy-pane" class="tab-pane active">
+    <div class="grid">
+      <!-- Inputs -->
+      <div>
+        <div class="card">
+          <h2>候选期权参数</h2>
+
+          <label>标的</label>
+          <input type="text" id="b-ticker" value="PLTR">
+
+          <label>类型</label>
+          <select id="b-optType">
+            <option value="put">PUT(看跌)</option>
+            <option value="call">CALL(看涨)</option>
+          </select>
+
+          <div class="row2">
+            <div>
+              <label>行权价 K ($)</label>
+              <input type="number" id="b-strike" step="0.01" value="140">
+            </div>
+            <div>
+              <label>到期日</label>
+              <input type="date" id="b-expDate">
+            </div>
+          </div>
+
+          <div class="row2">
+            <div>
+              <label>标的现价 S ($)</label>
+              <input type="number" id="b-spot" step="0.01" value="142">
+            </div>
+            <div>
+              <label>权利金 ask ($)<span class="hint">每股</span></label>
+              <input type="number" id="b-ask" step="0.01" value="4.5">
+            </div>
+          </div>
+
+          <div class="row2">
+            <div>
+              <label>IV (%)<span class="hint">隐含波动率</span></label>
+              <input type="number" id="b-iv" step="0.1" value="55">
+            </div>
+            <div>
+              <label>无风险利率 r (%)</label>
+              <input type="number" id="b-rate" step="0.01" value="4.3">
+            </div>
+          </div>
+
+          <label>IV Rank<span class="hint">过去 1 年中位置 0-100 · 查询:<a href="https://www.barchart.com/stocks/quotes/PLTR/volatility-charts" target="_blank" style="color:#0071e3;">Barchart</a> / <a href="https://marketchameleon.com/Overview/PLTR/IV/" target="_blank" style="color:#0071e3;">MarketChameleon</a></span></label>
+          <div class="slider-wrap">
+            <input type="range" id="b-ivRank" min="0" max="100" value="65" oninput="document.getElementById('b-ivRankVal').textContent = this.value">
+            <span class="slider-value" id="b-ivRankVal">65</span>
+          </div>
+
+          <button onclick="calcBuy()">分析这笔买入</button>
+        </div>
+      </div>
+
+      <!-- Output -->
+      <div>
+        <div class="card">
+          <h2>分析结果</h2>
+          <div id="buyResult">
+            <div class="empty-hint">填好参数,点"分析这笔买入"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============== EXIT MODE ============== -->
+  <div id="exit-pane" class="tab-pane">
+    <div class="grid">
+      <!-- Inputs -->
+      <div>
+        <div class="card">
+          <h2>持仓信息</h2>
+
+          <label>标的 / 到期日</label>
+          <div class="row2">
+            <input type="text" id="ticker" value="PLTR">
+            <input type="date" id="expDate">
+          </div>
+
+          <label>类型</label>
+          <select id="optType">
+            <option value="put">PUT</option>
+            <option value="call">CALL</option>
+          </select>
+
+          <div class="row2">
+            <div>
+              <label>行权价 ($)</label>
+              <input type="number" id="strike" step="0.01" value="150">
+            </div>
+            <div>
+              <label>成本 ($/股)</label>
+              <input type="number" id="cost" step="0.01" value="7.1">
+            </div>
+          </div>
+
+          <div class="row2">
+            <div>
+              <label>当前涨跌幅 (%)</label>
+              <input type="number" id="gainPct" step="0.1" value="41">
+            </div>
+            <div>
+              <label>剩余天数 DTE</label>
+              <input type="number" id="dte" step="1" value="19">
+            </div>
+          </div>
+
+          <div class="row2">
+            <div>
+              <label>当前标的价 ($)</label>
+              <input type="number" id="spotPrice" step="0.01" value="142">
+            </div>
+            <div>
+              <label>当前 IV (%)</label>
+              <input type="number" id="exitIV" step="0.1" value="50">
+            </div>
+          </div>
+
+          <button onclick="calcExit()">分析当前持仓</button>
+          <button class="secondary" onclick="savePosition()">保存持仓</button>
+
+          <div class="positions-list">
+            <div style="font-size:13px; color:#555; margin-bottom:8px;">已保存</div>
+            <div id="posList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Output -->
+      <div>
+        <div class="card">
+          <h2>分析结果</h2>
+          <div id="exitResult">
+            <div class="empty-hint">填好持仓,点"分析当前持仓"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   Black-Scholes 计算核心
+   ============================================================ */
+function normPdf(x) {
+  return Math.exp(-x*x/2) / Math.sqrt(2*Math.PI);
+}
+function normCdf(x) {
+  // Abramowitz & Stegun 精度足够
+  const a1=0.254829592, a2=-0.284496736, a3=1.421413741;
+  const a4=-1.453152027, a5=1.061405429, p=0.3275911;
+  const sign = x < 0 ? -1 : 1;
+  x = Math.abs(x) / Math.sqrt(2);
+  const t = 1.0/(1.0+p*x);
+  const y = 1.0 - (((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);
+  return 0.5 * (1.0 + sign*y);
+}
+
+function blackScholes(S, K, T, r, sigma, type) {
+  if (T <= 0 || sigma <= 0) {
+    const intr = type === 'call' ? Math.max(0,S-K) : Math.max(0,K-S);
+    return { price: intr, delta: 0, gamma: 0, theta: 0, vega: 0, rho: 0 };
+  }
+  const sqrtT = Math.sqrt(T);
+  const d1 = (Math.log(S/K) + (r + sigma*sigma/2)*T) / (sigma*sqrtT);
+  const d2 = d1 - sigma*sqrtT;
+  const Nd1 = normCdf(d1), Nd2 = normCdf(d2), nd1 = normPdf(d1);
+
+  let price, delta, theta, rho;
+  if (type === 'call') {
+    price = S*Nd1 - K*Math.exp(-r*T)*Nd2;
+    delta = Nd1;
+    theta = (-S*nd1*sigma/(2*sqrtT) - r*K*Math.exp(-r*T)*Nd2) / 365;
+    rho = K*T*Math.exp(-r*T)*Nd2 / 100;
+  } else {
+    price = K*Math.exp(-r*T)*(1-Nd2) - S*(1-Nd1);
+    delta = Nd1 - 1;
+    theta = (-S*nd1*sigma/(2*sqrtT) + r*K*Math.exp(-r*T)*(1-Nd2)) / 365;
+    rho = -K*T*Math.exp(-r*T)*(1-Nd2) / 100;
+  }
+  return {
+    price,
+    delta,
+    gamma: nd1 / (S*sigma*sqrtT),
+    theta,             // per day
+    vega: S*nd1*sqrtT / 100,  // per 1% IV change
+    rho                // per 1% rate change
+  };
+}
+
+/* 反推 IV(给定市场价反推 sigma)*/
+function impliedVol(marketPrice, S, K, T, r, type) {
+  let lo = 0.01, hi = 5.0;
+  for (let i = 0; i < 60; i++) {
+    const mid = (lo+hi)/2;
+    const p = blackScholes(S,K,T,r,mid,type).price;
+    if (p > marketPrice) hi = mid; else lo = mid;
+  }
+  return (lo+hi)/2;
+}
+
+/* ============================================================
+   工具函数
+   ============================================================ */
+function daysBetween(d1, d2) {
+  return Math.max(0, Math.round((d2 - d1) / (1000*60*60*24)));
+}
+function dotClass(s) { return 'dot-' + s; }
+function rowClass(s) { return 'health-' + s; }
+function fmt(x, d=2) { return x.toFixed(d); }
+function fmtSign(x, d=2) { return (x>=0?'+':'') + x.toFixed(d); }
+
+/* ============================================================
+   健康度评分
+   ============================================================ */
+function scoreDelta(absD) {
+  if (absD >= 0.30 && absD <= 0.65) return 'green';
+  if ((absD >= 0.15 && absD < 0.30) || (absD > 0.65 && absD <= 0.85)) return 'yellow';
+  return 'red';
+}
+function scoreThetaPct(p) {
+  if (p < 1) return 'green';
+  if (p < 3) return 'yellow';
+  return 'red';
+}
+function scoreVegaPct(p) {
+  if (p < 3) return 'green';
+  if (p < 5) return 'yellow';
+  return 'red';
+}
+function scoreDTE(d) {
+  if (d >= 30 && d <= 90) return 'green';
+  if ((d >= 14 && d < 30) || (d > 90 && d <= 180)) return 'yellow';
+  return 'red';
+}
+function scoreIVRank(r) {
+  if (r < 30) return 'green';
+  if (r < 60) return 'yellow';
+  return 'red';
+}
+function aggregateScore(scores) {
+  const c = {green:0, yellow:0, red:0};
+  Object.values(scores).forEach(s => c[s]++);
+  if (c.red >= 2) return 'red';
+  if (c.red >= 1 || c.yellow >= 3) return 'yellow';
+  return 'green';
+}
+
+/* ============================================================
+   Tab 切换
+   ============================================================ */
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', (i===0 && tab==='buy') || (i===1 && tab==='exit'));
+  });
+  document.getElementById('buy-pane').classList.toggle('active', tab==='buy');
+  document.getElementById('exit-pane').classList.toggle('active', tab==='exit');
+}
+
+/* ============================================================
+   买入决策
+   ============================================================ */
+function calcBuy() {
+  const ticker = document.getElementById('b-ticker').value || '—';
+  const type = document.getElementById('b-optType').value;
+  const K = parseFloat(document.getElementById('b-strike').value);
+  const expDate = document.getElementById('b-expDate').value;
+  const S = parseFloat(document.getElementById('b-spot').value);
+  const ask = parseFloat(document.getElementById('b-ask').value);
+  const ivPct = parseFloat(document.getElementById('b-iv').value);
+  const ratePct = parseFloat(document.getElementById('b-rate').value);
+  const ivRank = parseFloat(document.getElementById('b-ivRank').value);
+  const accountSize = parseFloat(document.getElementById('accountSize').value) || 0;
+
+  if (isNaN(K)||isNaN(S)||isNaN(ask)||isNaN(ivPct)||!expDate) {
+    alert('请填写完整参数(包括到期日)'); return;
+  }
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const exp = new Date(expDate); exp.setHours(0,0,0,0);
+  const dte = daysBetween(today, exp);
+  if (dte === 0) { alert('到期日必须在未来'); return; }
+
+  const T = dte / 365;
+  const sigma = ivPct / 100;
+  const r = ratePct / 100;
+
+  const g = blackScholes(S, K, T, r, sigma, type);
+  const theoreticalPrice = g.price;
+  const overpaidPct = (ask - theoreticalPrice) / theoreticalPrice * 100;
+
+  // 健康度
+  const thetaPct = Math.abs(g.theta) / ask * 100;
+  const vegaPct = g.vega / ask * 100;
+  const scores = {
+    delta: scoreDelta(Math.abs(g.delta)),
+    theta: scoreThetaPct(thetaPct),
+    vega: scoreVegaPct(vegaPct),
+    dte: scoreDTE(dte),
+    ivRank: scoreIVRank(ivRank)
+  };
+  const overall = aggregateScore(scores);
+
+  // 仓位建议
+  const cost1Contract = ask * 100;
+  const sizing = accountSize > 0 ? {
+    safe: Math.floor(accountSize * 0.01 / cost1Contract),
+    aggressive: Math.floor(accountSize * 0.03 / cost1Contract),
+    portfolio: Math.floor(accountSize * 0.10 / cost1Contract)
+  } : null;
+
+  // 盈亏平衡
+  const breakeven = type === 'put' ? (K - ask) : (K + ask);
+  const breakevenMovePct = (breakeven - S) / S * 100;
+
+  // 推荐
+  let recClass, recTitle, recDetail;
+  if (overall === 'green') {
+    recClass = 'rec-buy'; recTitle = '✅ 可以买'; recDetail = '主要指标健康,符合买入标准。';
+  } else if (overall === 'yellow') {
+    recClass = 'rec-wait'; recTitle = '⚠️ 谨慎 / 等待更好时机'; recDetail = '部分指标偏离健康区,可考虑减小仓位或等待。';
+  } else {
+    recClass = 'rec-skip'; recTitle = '❌ 不建议买'; recDetail = '多个指标处于不利位置,继续等待。';
+  }
+
+  // 价差判断
+  let priceVerdict;
+  if (Math.abs(overpaidPct) < 3) priceVerdict = '<span style="color:#0a7d3e;">价格合理</span>';
+  else if (overpaidPct > 3) priceVerdict = `<span style="color:#c41e3a;">市场报价偏贵 +${overpaidPct.toFixed(1)}%</span>`;
+  else priceVerdict = `<span style="color:#0a7d3e;">市场报价偏便宜 ${overpaidPct.toFixed(1)}%</span>`;
+
+  // 情景矩阵:不同股价 × 不同时间剩余的期权理论价
+  const priceSteps = [-15, -10, -5, 0, 5, 10, 15].map(p => S * (1 + p/100));
+  const dayRatios = [1, 0.66, 0.33, 0]; // 100%, 2/3, 1/3, 0 of DTE remaining
+  const dayLabels = [`今天(${dte}天)`, `${Math.round(dte*0.66)}天`, `${Math.round(dte*0.33)}天`, '到期日'];
+  let matrixRows = '';
+  priceSteps.forEach(s => {
+    let row = `<tr><td style="text-align:left;">$${s.toFixed(0)} (${(((s-S)/S)*100>=0?'+':'')+((s-S)/S*100).toFixed(0)}%)</td>`;
+    dayRatios.forEach(ratio => {
+      const tRemaining = dte * ratio / 365;
+      let pv;
+      if (tRemaining <= 0) {
+        pv = type === 'put' ? Math.max(0, K-s) : Math.max(0, s-K);
+      } else {
+        pv = blackScholes(s, K, tRemaining, r, sigma, type).price;
+      }
+      const pnl = pv - ask;
+      const pnlPct = pnl / ask * 100;
+      const cls = pnl > 0 ? 'pnl-pos' : (pnl < 0 ? 'pnl-neg' : '');
+      row += `<td class="${cls}">${fmtSign(pnlPct,0)}%<br><span style="color:#999;font-size:10px;">$${pv.toFixed(2)}</span></td>`;
+    });
+    row += '</tr>';
+    matrixRows += row;
+  });
+
+  // 风险/收益
+  const maxLoss = ask;
+  const targetMove = type === 'put' ? S * 0.9 : S * 1.1; // 假设目标 ±10%
+  const targetIntrinsic = type === 'put' ? Math.max(0, K-targetMove) : Math.max(0, targetMove-K);
+  const targetProfit = targetIntrinsic - ask;
+  const rr = maxLoss > 0 ? (targetProfit / maxLoss) : 0;
+
+  // 渲染
+  document.getElementById('buyResult').innerHTML = `
+    <!-- 推荐 -->
+    <div class="rec-box ${recClass}">
+      <div class="rec-title">${recTitle}</div>
+      <div>${recDetail}</div>
+    </div>
+
+    <!-- 4 个核心数 -->
+    <div class="stat-grid">
+      <div class="stat blue">
+        <div class="label">BS 理论价</div>
+        <div class="value">$${theoreticalPrice.toFixed(2)}</div>
+        <div class="small">${priceVerdict}</div>
+      </div>
+      <div class="stat ${type==='put'?'red':'green'}">
+        <div class="label">盈亏平衡价</div>
+        <div class="value">$${breakeven.toFixed(2)}</div>
+        <div class="small">${type==='put'?'下跌':'上涨'} ${Math.abs(breakevenMovePct).toFixed(1)}%</div>
+      </div>
+      <div class="stat green">
+        <div class="label">假设 ${type==='put'?'-10%':'+10%'} 目标</div>
+        <div class="value">${fmtSign(targetProfit/ask*100,0)}%</div>
+        <div class="small">$${targetProfit.toFixed(2)}/股</div>
+      </div>
+      <div class="stat red">
+        <div class="label">最大亏损</div>
+        <div class="value">-$${maxLoss.toFixed(2)}</div>
+        <div class="small">$${(maxLoss*100).toFixed(0)}/合约</div>
+      </div>
+    </div>
+
+    <!-- 希腊字母 -->
+    <h3>希腊字母</h3>
+    <details class="info-box">
+      <summary>各字母含义说明</summary>
+      <div class="info-content">
+        <strong>Delta (Δ)</strong>:股价变 ±$1,期权价变多少。绝对值≈到期价内概率。CALL 区间 0~+1,PUT 区间 -1~0。<br>
+        <strong>Gamma (Γ)</strong>:Delta 的变化速度。平值最大,临到期会爆炸式上升,代表方向加速度。<br>
+        <strong>Theta (Θ)</strong>:每天损失的时间价值。买方永远是负值,临到期加速衰减。<br>
+        <strong>Vega (V)</strong>:IV 每变 1%,期权价变多少。长期权 Vega 大,事件前后影响最明显。<br>
+        <strong>Rho (ρ)</strong>:利率每变 1%,期权价变多少。短期权基本可忽略。<br>
+        <strong>Theta%</strong>:Theta 占当前权利金的百分比/天。&gt; 3% 危险区。<br>
+        <strong>Vega%</strong>:Vega 占当前权利金的百分比/每 1% IV 变动。&gt; 5% 表示对 IV 敏感,IV 崩盘风险大。
+      </div>
+    </details>
+    <div class="card" style="margin:0 0 16px 0; padding:14px; background:#f9f9fb; box-shadow:none;">
+      <div class="greeks-table">
+        <span class="greek-name">Delta</span>
+        <span class="greek-value">${g.delta.toFixed(4)}</span>
+        <span class="greek-name">Gamma</span>
+        <span class="greek-value">${g.gamma.toFixed(4)}</span>
+
+        <span class="greek-name">Theta</span>
+        <span class="greek-value">${g.theta.toFixed(4)}/天</span>
+        <span class="greek-name">Vega</span>
+        <span class="greek-value">${g.vega.toFixed(4)}</span>
+
+        <span class="greek-name">Theta%</span>
+        <span class="greek-value">${thetaPct.toFixed(2)}%/天</span>
+        <span class="greek-name">Vega%</span>
+        <span class="greek-value">${vegaPct.toFixed(2)}%</span>
+      </div>
+    </div>
+
+    <!-- 健康度评分 -->
+    <h3>健康度评分</h3>
+    <details class="info-box">
+      <summary>评分规则说明</summary>
+      <div class="info-content">
+        从 5 个维度给一笔买入打分:🟢 健康 / 🟡 警戒 / 🔴 危险。<br>
+        <strong>Delta |Δ|</strong>:0.30–0.65 为🟢平衡区(性价比高);0.15–0.30 或 0.65–0.85 为🟡;其余🔴(太虚或太深价内)。<br>
+        <strong>Theta%/天</strong>:&lt;1% 🟢;1–3% 🟡;&gt;3% 🔴(时间衰减太快)。<br>
+        <strong>Vega%</strong>:&lt;3% 🟢;3–5% 🟡;&gt;5% 🔴(IV 风险过大)。<br>
+        <strong>DTE 剩余天数</strong>:30–90 天 🟢甜点区;14–30 或 90–180 🟡;其余🔴(过短爆 Theta / 过长资金占用)。<br>
+        <strong>IV Rank</strong>:&lt;30 🟢便宜;30–60 🟡;&gt;60 🔴 偏贵(买方不利)。<br>
+        <strong>综合判定</strong>:出现 ≥2 个🔴 → 整体🔴;1 个🔴 或 ≥3 个🟡 → 🟡;否则 🟢。
+      </div>
+    </details>
+    <div class="health-row ${rowClass(scores.delta)}">
+      <span><span class="health-dot ${dotClass(scores.delta)}"></span>Delta |${Math.abs(g.delta).toFixed(2)}|</span>
+      <span style="color:#666;font-size:12px;">${
+        scores.delta==='green'?'平衡区,弹性好':
+        scores.delta==='yellow'?'偏离平衡':'极端值,风险高'
+      }</span>
+    </div>
+    <div class="health-row ${rowClass(scores.theta)}">
+      <span><span class="health-dot ${dotClass(scores.theta)}"></span>Theta ${thetaPct.toFixed(2)}%/天</span>
+      <span style="color:#666;font-size:12px;">${
+        scores.theta==='green'?'时间衰减慢':
+        scores.theta==='yellow'?'中等衰减':'临期高速衰减'
+      }</span>
+    </div>
+    <div class="health-row ${rowClass(scores.vega)}">
+      <span><span class="health-dot ${dotClass(scores.vega)}"></span>Vega ${vegaPct.toFixed(2)}%</span>
+      <span style="color:#666;font-size:12px;">${
+        scores.vega==='green'?'IV 风险低':
+        scores.vega==='yellow'?'IV 风险中等':'IV 风险大'
+      }</span>
+    </div>
+    <div class="health-row ${rowClass(scores.dte)}">
+      <span><span class="health-dot ${dotClass(scores.dte)}"></span>DTE ${dte} 天</span>
+      <span style="color:#666;font-size:12px;">${
+        scores.dte==='green'?'30-90 天甜点区':
+        scores.dte==='yellow'?'警戒区':'危险区'
+      }</span>
+    </div>
+    <div class="health-row ${rowClass(scores.ivRank)}">
+      <span><span class="health-dot ${dotClass(scores.ivRank)}"></span>IV Rank ${ivRank}</span>
+      <span style="color:#666;font-size:12px;">${
+        scores.ivRank==='green'?'IV 低位,买便宜':
+        scores.ivRank==='yellow'?'IV 中位':'IV 高位,贵'
+      }</span>
+    </div>
+
+    <!-- 仓位建议 -->
+    <h3>仓位建议</h3>
+    ${sizing ? `
+      <div class="stat-grid three">
+        <div class="stat green">
+          <div class="label">保守(单笔 1%)</div>
+          <div class="value">${sizing.safe} 张</div>
+          <div class="small">$${(sizing.safe*cost1Contract).toFixed(0)}</div>
+        </div>
+        <div class="stat yellow">
+          <div class="label">激进(单标的 3%)</div>
+          <div class="value">${sizing.aggressive} 张</div>
+          <div class="small">$${(sizing.aggressive*cost1Contract).toFixed(0)}</div>
+        </div>
+        <div class="stat blue">
+          <div class="label">期权总仓上限(10%)</div>
+          <div class="value">${sizing.portfolio} 张</div>
+          <div class="small">$${(sizing.portfolio*cost1Contract).toFixed(0)}</div>
+        </div>
+      </div>
+      <div class="small">基于账户 $${accountSize.toLocaleString()},单张成本 $${cost1Contract.toFixed(0)}</div>
+    ` : `<div class="key-box">填写顶部"账户总额"获得具体仓位建议</div>`}
+
+    <!-- 情景矩阵 -->
+    <h3>情景分析(股价 × 时间)</h3>
+    <table class="scenario-matrix">
+      <thead>
+        <tr>
+          <th style="text-align:left;">${ticker} 股价</th>
+          ${dayLabels.map(d => `<th>${d}</th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>${matrixRows}</tbody>
+    </table>
+    <div class="footnote">
+      绿/红显示当前 ask 价买入后的盈亏百分比,数字下方为该情景下的期权理论价(BS)。<br>
+      ${type==='put' ? '看跌期权:股价下跌 + 时间未到期 = 利润最大' : '看涨期权:股价上涨 + 时间未到期 = 利润最大'}
+    </div>
+
+    <div class="footnote">
+      * IV 假设保持不变,真实情况 IV 会随事件波动。在 ${type==='put'?'下跌':'上涨'}+ IV 上升时实际利润可能高于此估算。<br>
+      * 模型不考虑美式期权的提前行权溢价、股息影响和 bid-ask 价差。
+    </div>
+  `;
+}
+
+/* ============================================================
+   出场决策(增强版,加入希腊字母)
+   ============================================================ */
+function calcExit() {
+  const ticker = document.getElementById('ticker').value || '—';
+  const type = document.getElementById('optType').value;
+  const K = parseFloat(document.getElementById('strike').value);
+  const cost = parseFloat(document.getElementById('cost').value);
+  const gainPct = parseFloat(document.getElementById('gainPct').value);
+  const dte = parseFloat(document.getElementById('dte').value);
+  const S = parseFloat(document.getElementById('spotPrice').value);
+  const ivPct = parseFloat(document.getElementById('exitIV').value);
+
+  if (isNaN(K)||isNaN(cost)||isNaN(gainPct)) { alert('请填写完整参数'); return; }
+
+  const currentPremium = cost * (1 + gainPct/100);
+  const profitNow = currentPremium - cost;
+  const profitNowPerContract = profitNow * 100;
+
+  let breakevenMatch, breakevenZero, expireWorthlessAt;
+  if (type === 'put') {
+    breakevenMatch = K - currentPremium;
+    breakevenZero = K - cost;
+    expireWorthlessAt = `≥ $${K.toFixed(2)}`;
+  } else {
+    breakevenMatch = K + currentPremium;
+    breakevenZero = K + cost;
+    expireWorthlessAt = `≤ $${K.toFixed(2)}`;
+  }
+
+  // 计算希腊字母(如果有 spot 和 IV)
+  let greeks = null, scores = null, overall = null;
+  if (!isNaN(S) && !isNaN(ivPct) && !isNaN(dte) && dte > 0) {
+    const T = dte / 365;
+    greeks = blackScholes(S, K, T, 0.043, ivPct/100, type);
+    const thetaPct = Math.abs(greeks.theta) / currentPremium * 100;
+    const vegaPct = greeks.vega / currentPremium * 100;
+    scores = {
+      delta: scoreDelta(Math.abs(greeks.delta)),
+      theta: scoreThetaPct(thetaPct),
+      vega: scoreVegaPct(vegaPct),
+      dte: scoreDTE(dte)
+    };
+    overall = aggregateScore(scores);
+  }
+
+  // 敏感性表
+  const range = Math.max(K * 0.15, currentPremium * 2);
+  const center = type === 'put' ? K - currentPremium : K + currentPremium;
+  const prices = [];
+  for (let i = -4; i <= 4; i++) prices.push(center + (range/4)*i);
+  prices.push(breakevenMatch);
+  prices.sort((a,b) => type==='put' ? a-b : b-a);
+
+  const intrinsic = (s) => type==='put' ? Math.max(0,K-s) : Math.max(0,s-K);
+  let rows = '';
+  prices.forEach(s => {
+    const intr = intrinsic(s);
+    const profitHold = intr - cost;
+    const diff = profitHold - profitNow;
+    const isMatch = Math.abs(s - breakevenMatch) < 0.01;
+    const cls = isMatch ? 'highlight' : (diff > 0 ? 'profit-better' : 'profit-worse');
+    rows += `<tr class="${cls}">
+      <td>$${s.toFixed(2)}${isMatch?' ← 持有=现在卖':''}</td>
+      <td>$${intr.toFixed(2)}</td>
+      <td>${profitHold>=0?'+':''}$${profitHold.toFixed(2)} (${profitHold>=0?'+':''}${(profitHold/cost*100).toFixed(0)}%)</td>
+      <td>${diff>=0?'+':''}$${diff.toFixed(2)}</td>
+    </tr>`;
+  });
+
+  const direction = type==='put' ? '跌破' : '涨破';
+
+  // 出场建议
+  let exitRec = '';
+  if (greeks) {
+    const thetaPct = Math.abs(greeks.theta) / currentPremium * 100;
+    let advice = [];
+    if (gainPct >= 50) advice.push('已浮盈 50%+,建议至少卖 1/2 锁利');
+    if (thetaPct > 3) advice.push(`Theta 加速(${thetaPct.toFixed(1)}%/天),时间不利于持有`);
+    if (dte <= 7) advice.push('剩 7 天内,Gamma 风险大,建议平仓');
+    if (dte <= 14) advice.push('剩 2 周内,进入 Theta 加速区');
+    if (Math.abs(greeks.delta) < 0.15) advice.push('Delta 已小,继续持有性价比低');
+    if (Math.abs(greeks.delta) > 0.85) advice.push('Delta 接近 1,转股或锁利');
+    if (advice.length === 0) advice.push('当前希腊字母健康,可以继续持有,设好止盈止损即可');
+    exitRec = `<div class="key-box"><strong>出场建议:</strong><br>• ${advice.join('<br>• ')}</div>`;
+  }
+
+  // 渲染
+  document.getElementById('exitResult').innerHTML = `
+    <div class="stat-grid three">
+      <div class="stat blue">
+        <div class="label">当前权利金</div>
+        <div class="value">$${currentPremium.toFixed(2)}</div>
+      </div>
+      <div class="stat green">
+        <div class="label">现在卖锁利</div>
+        <div class="value">+$${profitNow.toFixed(2)}</div>
+        <div class="small">$${profitNowPerContract.toFixed(0)}/合约 (+${gainPct}%)</div>
+      </div>
+      <div class="stat red">
+        <div class="label">持有最大风险</div>
+        <div class="value">-$${cost.toFixed(2)}</div>
+        <div class="small">${expireWorthlessAt} 归零</div>
+      </div>
+    </div>
+
+    <div class="key-box">
+      <strong>核心结论:</strong> 到期日 ${ticker} 必须${direction} <strong>$${breakevenMatch.toFixed(2)}</strong>,持有才比现在卖更赚。<br>
+      持有打平点(不亏不赚):<strong>$${breakevenZero.toFixed(2)}</strong>。
+    </div>
+
+    ${greeks ? `
+      <h3>当前希腊字母</h3>
+      <details class="info-box">
+        <summary>各字母含义说明</summary>
+        <div class="info-content">
+          <strong>Delta (Δ)</strong>:股价变 ±$1,期权价变多少。绝对值≈到期价内概率。<br>
+          <strong>Gamma (Γ)</strong>:Delta 的变化速度,临到期爆炸,持有最危险的时段。<br>
+          <strong>Theta (Θ)</strong>:每天损失的时间价值,买方为负。<br>
+          <strong>Vega (V)</strong>:IV 每变 1% 期权价变多少。<br>
+          <strong>Theta%</strong>:Theta 占当前权利金的百分比/天。&gt; 3% 表示已进入加速衰减区,出场信号。<br>
+          <strong>Vega%</strong>:Vega 占当前权利金的百分比/每 1% IV。高 Vega% 意味着 IV 一旦回落,即使方向不变利润也会蒸发(IV crush)。
+        </div>
+      </details>
+      <div class="card" style="margin:0 0 16px 0; padding:14px; background:#f9f9fb; box-shadow:none;">
+        <div class="greeks-table">
+          <span class="greek-name">Delta</span>
+          <span class="greek-value">${greeks.delta.toFixed(3)}</span>
+          <span class="greek-name">Gamma</span>
+          <span class="greek-value">${greeks.gamma.toFixed(4)}</span>
+
+          <span class="greek-name">Theta</span>
+          <span class="greek-value">${greeks.theta.toFixed(4)}/天</span>
+          <span class="greek-name">Vega</span>
+          <span class="greek-value">${greeks.vega.toFixed(4)}</span>
+
+          <span class="greek-name">Theta%</span>
+          <span class="greek-value">${(Math.abs(greeks.theta)/currentPremium*100).toFixed(2)}%/天</span>
+          <span class="greek-name">Vega%</span>
+          <span class="greek-value">${(greeks.vega/currentPremium*100).toFixed(2)}%</span>
+        </div>
+      </div>
+
+      <h3>健康度评分</h3>
+      <details class="info-box">
+        <summary>评分规则说明</summary>
+        <div class="info-content">
+          针对当前持仓的 4 个维度判断"还能不能拿":<br>
+          <strong>Delta |Δ|</strong>:0.30–0.65 🟢;0.15–0.30 或 0.65–0.85 🟡;其余 🔴。<br>
+          ・Delta 太小 → 已经偏离方向,继续拿性价比低<br>
+          ・Delta 太大 → 接近 1,赚的几乎是内在价值,可考虑锁利或转股<br>
+          <strong>Theta 衰减(%/天)</strong>:&lt;1% 🟢;1–3% 🟡;&gt;3% 🔴 → 时间价值在加速流失,平仓优先级高。<br>
+          <strong>Vega 暴露(%)</strong>:&lt;3% 🟢;3–5% 🟡;&gt;5% 🔴 → 一旦 IV 回落利润会蒸发(IV crush)。<br>
+          <strong>剩余 DTE</strong>:30–90 天 🟢;14–30 或 90–180 🟡;&lt;14 天 🔴(Gamma 风险陡升)。<br>
+          <strong>综合判定</strong>:≥2 个🔴 → 🔴(强烈建议平仓);1 个🔴 或 ≥3 个🟡 → 🟡(考虑减半锁利);全 🟢 → 可继续持有。
+        </div>
+      </details>
+      <div class="health-row ${rowClass(scores.delta)}">
+        <span><span class="health-dot ${dotClass(scores.delta)}"></span>Delta</span>
+        <span style="color:#666;font-size:12px;">${Math.abs(greeks.delta).toFixed(2)}</span>
+      </div>
+      <div class="health-row ${rowClass(scores.theta)}">
+        <span><span class="health-dot ${dotClass(scores.theta)}"></span>Theta 衰减</span>
+        <span style="color:#666;font-size:12px;">${(Math.abs(greeks.theta)/currentPremium*100).toFixed(2)}%/天</span>
+      </div>
+      <div class="health-row ${rowClass(scores.vega)}">
+        <span><span class="health-dot ${dotClass(scores.vega)}"></span>Vega 暴露</span>
+        <span style="color:#666;font-size:12px;">${(greeks.vega/currentPremium*100).toFixed(2)}%</span>
+      </div>
+      <div class="health-row ${rowClass(scores.dte)}">
+        <span><span class="health-dot ${dotClass(scores.dte)}"></span>剩余天数</span>
+        <span style="color:#666;font-size:12px;">${dte} 天</span>
+      </div>
+    ` : '<div class="key-box">填写"当前标的价"和"当前 IV"以获得希腊字母分析</div>'}
+
+    ${exitRec}
+
+    <h3>到期价格敏感性</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>${ticker} 到期价</th>
+          <th>内在价值</th>
+          <th>持有结果</th>
+          <th>vs 现在卖</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="footnote">
+      绿色 = 持有更赚 / 红色 = 持有更亏 / 黄色 = 打平线<br>
+      仅基于到期内在价值,提前平仓通常能多拿一点时间价值。
+    </div>
+  `;
+}
+
+/* ============================================================
+   持仓存档
+   ============================================================ */
+const STORAGE_KEY = 'options_positions_v2';
+const ACCOUNT_KEY = 'options_account_v1';
+
+function savePosition() {
+  const pos = {
+    id: Date.now(),
+    ticker: document.getElementById('ticker').value,
+    expDate: document.getElementById('expDate').value,
+    type: document.getElementById('optType').value,
+    strike: document.getElementById('strike').value,
+    cost: document.getElementById('cost').value,
+    gainPct: document.getElementById('gainPct').value,
+    dte: document.getElementById('dte').value,
+    spot: document.getElementById('spotPrice').value,
+    iv: document.getElementById('exitIV').value
+  };
+  if (!pos.ticker || !pos.strike || !pos.cost) { alert('请填写完整参数'); return; }
+  const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  list.push(pos);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  renderPositions();
+}
+function loadPosition(id) {
+  const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  const p = list.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('ticker').value = p.ticker;
+  document.getElementById('expDate').value = p.expDate;
+  document.getElementById('optType').value = p.type;
+  document.getElementById('strike').value = p.strike;
+  document.getElementById('cost').value = p.cost;
+  document.getElementById('gainPct').value = p.gainPct;
+  document.getElementById('dte').value = p.dte;
+  document.getElementById('spotPrice').value = p.spot || '';
+  document.getElementById('exitIV').value = p.iv || '';
+  calcExit();
+}
+function deletePosition(id, e) {
+  e.stopPropagation();
+  const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]').filter(x => x.id !== id);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  renderPositions();
+}
+function renderPositions() {
+  const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  const el = document.getElementById('posList');
+  if (list.length === 0) { el.innerHTML = '<div class="empty-hint" style="padding:10px;">暂无</div>'; return; }
+  el.innerHTML = list.map(p => `
+    <div class="pos-item" onclick="loadPosition(${p.id})">
+      <div>
+        <strong>${p.ticker}</strong> ${p.expDate} ${p.type.toUpperCase()}${p.strike}
+        <div class="small">成本 $${p.cost} · 当前 ${p.gainPct>=0?'+':''}${p.gainPct}%</div>
+      </div>
+      <button class="del" onclick="deletePosition(${p.id}, event)">删除</button>
+    </div>
+  `).join('');
+}
+
+/* 账户额持久化 */
+function saveAccount() {
+  const v = document.getElementById('accountSize').value;
+  if (v) {
+    localStorage.setItem(ACCOUNT_KEY, v);
+    document.getElementById('accountStatus').textContent = '✓ 已保存';
+    setTimeout(() => document.getElementById('accountStatus').textContent = '', 1500);
+  }
+}
+document.getElementById('accountSize').addEventListener('change', saveAccount);
+
+/* ============================================================
+   初始化
+   ============================================================ */
+const today = new Date();
+const exitExp = new Date('2026-06-26');
+document.getElementById('expDate').value = '2026-06-26';
+document.getElementById('b-expDate').value = '2026-07-18';
+
+const savedAccount = localStorage.getItem(ACCOUNT_KEY);
+if (savedAccount) document.getElementById('accountSize').value = savedAccount;
+
+renderPositions();
+calcBuy();
+calcExit();
+</script>
+</body>
+</html>

@@ -339,6 +339,7 @@
   <div class="tabs">
     <div class="tab active" onclick="switchTab('buy')">📊 买入决策</div>
     <div class="tab" onclick="switchTab('exit')">💰 出场决策</div>
+    <div class="tab" onclick="switchTab('strategy')">📈 策略组合</div>
   </div>
 
   <!-- ============== BUY MODE ============== -->
@@ -487,6 +488,86 @@
       </div>
     </div>
   </div>
+
+  <!-- ============== STRATEGY MODE ============== -->
+  <div id="strategy-pane" class="tab-pane">
+    <div class="grid">
+      <!-- Inputs -->
+      <div>
+        <div class="card">
+          <h2>策略选择</h2>
+
+          <label>策略类型</label>
+          <select id="s-strategy" onchange="renderLegs()">
+            <optgroup label="单腿">
+              <option value="single">单腿 (Single Leg)</option>
+            </optgroup>
+            <optgroup label="价差策略 (Spreads)">
+              <option value="bullCall">牛市价差 · 借记 (Bull Call)</option>
+              <option value="bullPut">牛市价差 · 信用 (Bull Put)</option>
+              <option value="bearPut">熊市价差 · 借记 (Bear Put)</option>
+              <option value="bearCall">熊市价差 · 信用 (Bear Call)</option>
+            </optgroup>
+            <optgroup label="波动率策略 (Volatility)">
+              <option value="straddle">跨式 (Long Straddle)</option>
+              <option value="strangle">勒式 (Long Strangle)</option>
+            </optgroup>
+            <optgroup label="区间/收益增强 (Income / Range)">
+              <option value="butterfly">蝶式 · Call (Long Butterfly)</option>
+              <option value="ironCondor">铁鹰式 (Iron Condor)</option>
+            </optgroup>
+          </select>
+
+          <details class="info-box">
+            <summary>策略说明</summary>
+            <div class="info-content" id="strategyDesc"></div>
+          </details>
+
+          <h3>共用参数</h3>
+          <div class="row2">
+            <div>
+              <label>标的</label>
+              <input type="text" id="s-ticker" value="PLTR">
+            </div>
+            <div>
+              <label>到期日</label>
+              <input type="date" id="s-expDate">
+            </div>
+          </div>
+          <div class="row3">
+            <div>
+              <label>现价 S ($)</label>
+              <input type="number" id="s-spot" step="0.01" value="142" onchange="renderLegs()">
+            </div>
+            <div>
+              <label>IV (%)</label>
+              <input type="number" id="s-iv" step="0.1" value="55">
+            </div>
+            <div>
+              <label>r (%)</label>
+              <input type="number" id="s-rate" step="0.01" value="4.3">
+            </div>
+          </div>
+
+          <h3>各腿参数</h3>
+          <div class="small" style="margin-bottom:8px;">权利金留空 → 由 BS 公式按 IV 自动估算</div>
+          <div id="legsContainer"></div>
+
+          <button onclick="calcStrategy()">计算策略</button>
+        </div>
+      </div>
+
+      <!-- Output -->
+      <div>
+        <div class="card">
+          <h2>策略分析</h2>
+          <div id="strategyResult">
+            <div class="empty-hint">选好策略和参数,点"计算策略"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -601,11 +682,14 @@ function aggregateScore(scores) {
    Tab 切换
    ============================================================ */
 function switchTab(tab) {
+  const tabs = ['buy', 'exit', 'strategy'];
   document.querySelectorAll('.tab').forEach((t,i) => {
-    t.classList.toggle('active', (i===0 && tab==='buy') || (i===1 && tab==='exit'));
+    t.classList.toggle('active', tabs[i] === tab);
   });
-  document.getElementById('buy-pane').classList.toggle('active', tab==='buy');
-  document.getElementById('exit-pane').classList.toggle('active', tab==='exit');
+  tabs.forEach(t => {
+    const el = document.getElementById(t+'-pane');
+    if (el) el.classList.toggle('active', t === tab);
+  });
 }
 
 /* ============================================================
@@ -1069,8 +1153,320 @@ function calcExit() {
 }
 
 /* ============================================================
-   持仓存档
+   策略组合(多腿)
    ============================================================ */
+const STRATEGIES = {
+  single: {
+    name: '单腿',
+    desc: '一买或一卖一边方向。基础工具,无对冲、无封顶。买方最大亏损 = 权利金;卖方理论亏损可巨大。',
+    legs: [{action:'buy', type:'call', kRel:0, qty:1}]
+  },
+  bullCall: {
+    name: '牛市价差 · 借记 (Bull Call Spread)',
+    desc: '买低 K1 call + 卖高 K2 call。看小涨。最大利润 = (K2-K1) - 净付权利金;最大亏损 = 净付权利金。比裸买便宜,但封顶利润。',
+    legs: [
+      {action:'buy', type:'call', kRel:0, qty:1},
+      {action:'sell', type:'call', kRel:5, qty:1}
+    ]
+  },
+  bullPut: {
+    name: '牛市价差 · 信用 (Bull Put Spread)',
+    desc: '卖高 K2 put + 买低 K1 put。看不跌(平盘也赚)。最大利润 = 净收权利金;最大亏损 = (K2-K1) - 净收权利金。胜率高,适合 IV 高位。',
+    legs: [
+      {action:'sell', type:'put', kRel:0, qty:1},
+      {action:'buy', type:'put', kRel:-5, qty:1}
+    ]
+  },
+  bearPut: {
+    name: '熊市价差 · 借记 (Bear Put Spread)',
+    desc: '买高 K2 put + 卖低 K1 put。看小跌。最大利润 = (K2-K1) - 净付权利金;最大亏损 = 净付权利金。',
+    legs: [
+      {action:'buy', type:'put', kRel:0, qty:1},
+      {action:'sell', type:'put', kRel:-5, qty:1}
+    ]
+  },
+  bearCall: {
+    name: '熊市价差 · 信用 (Bear Call Spread)',
+    desc: '卖低 K1 call + 买高 K2 call。看不涨(平盘也赚)。最大利润 = 净收权利金;最大亏损 = (K2-K1) - 净收权利金。',
+    legs: [
+      {action:'sell', type:'call', kRel:0, qty:1},
+      {action:'buy', type:'call', kRel:5, qty:1}
+    ]
+  },
+  straddle: {
+    name: '跨式 (Long Straddle)',
+    desc: '同行权同到期,买 1 call + 买 1 put。赌大波动(无方向)。最大亏损 = 两边权利金之和。需要股价大幅偏离 K 才回本,常见于财报前。怕 IV crush。',
+    legs: [
+      {action:'buy', type:'call', kRel:0, qty:1},
+      {action:'buy', type:'put', kRel:0, qty:1}
+    ]
+  },
+  strangle: {
+    name: '勒式 (Long Strangle)',
+    desc: '买虚值 call + 买虚值 put。比跨式便宜,但需要更大波动。',
+    legs: [
+      {action:'buy', type:'call', kRel:5, qty:1},
+      {action:'buy', type:'put', kRel:-5, qty:1}
+    ]
+  },
+  butterfly: {
+    name: '蝶式 · Call (Long Butterfly)',
+    desc: '买 1 低 + 卖 2 中 + 买 1 高(等距 call)。赌价格"刚好停在中间 K"。最大利润在中间行权价,最大亏损 = 净付权利金。低成本+高赔率,但精确性要求高。',
+    legs: [
+      {action:'buy', type:'call', kRel:-5, qty:1},
+      {action:'sell', type:'call', kRel:0, qty:2},
+      {action:'buy', type:'call', kRel:5, qty:1}
+    ]
+  },
+  ironCondor: {
+    name: '铁鹰式 (Iron Condor)',
+    desc: '卖虚值 put 价差 + 卖虚值 call 价差(共 4 腿)。赌价格停在两个翼之间。先收权利金,胜率高、单笔利润小,适合 IV 高位横盘。',
+    legs: [
+      {action:'buy', type:'put', kRel:-10, qty:1},
+      {action:'sell', type:'put', kRel:-5, qty:1},
+      {action:'sell', type:'call', kRel:5, qty:1},
+      {action:'buy', type:'call', kRel:10, qty:1}
+    ]
+  }
+};
+
+function renderLegs() {
+  const stratKey = document.getElementById('s-strategy').value;
+  const strat = STRATEGIES[stratKey];
+  document.getElementById('strategyDesc').innerHTML = `<strong>${strat.name}</strong><br>${strat.desc}`;
+  const S = parseFloat(document.getElementById('s-spot').value) || 142;
+  const c = document.getElementById('legsContainer');
+  const locked = stratKey !== 'single';
+  const lockNote = locked
+    ? '<div class="small" style="color:#0071e3; margin-bottom:8px;">🔒 动作和类型由策略锁定 · 仅可调整行权价 / 张数 / 权利金</div>'
+    : '';
+  c.innerHTML = lockNote + strat.legs.map((leg, i) => {
+    const k = (S + leg.kRel).toFixed(0);
+    const dis = locked ? 'disabled' : '';
+    const lockStyle = locked ? 'background:#eef0f4; color:#1d1d1f; cursor:not-allowed; font-weight:600;' : '';
+    return `
+      <div style="background:#f5f5f7; padding:10px; border-radius:8px; margin-bottom:8px;">
+        <div style="font-size:12px; color:#666; margin-bottom:6px;">第 ${i+1} 腿</div>
+        <div style="display:grid; grid-template-columns:62px 70px 1fr 60px 1fr; gap:6px; align-items:center;">
+          <select id="leg${i}-action" ${dis} style="padding:6px 4px; font-size:13px; ${lockStyle}">
+            <option value="buy" ${leg.action==='buy'?'selected':''}>买</option>
+            <option value="sell" ${leg.action==='sell'?'selected':''}>卖</option>
+          </select>
+          <select id="leg${i}-type" ${dis} style="padding:6px 4px; font-size:13px; ${lockStyle}">
+            <option value="call" ${leg.type==='call'?'selected':''}>CALL</option>
+            <option value="put" ${leg.type==='put'?'selected':''}>PUT</option>
+          </select>
+          <input type="number" id="leg${i}-k" placeholder="K" step="0.01" value="${k}" style="padding:6px; font-size:13px;">
+          <input type="number" id="leg${i}-qty" step="1" value="${leg.qty}" title="张数" style="padding:6px; font-size:13px;">
+          <input type="number" id="leg${i}-prem" placeholder="权利金 (空=BS)" step="0.01" style="padding:6px; font-size:13px;">
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function calcStrategy() {
+  const stratKey = document.getElementById('s-strategy').value;
+  const strat = STRATEGIES[stratKey];
+  const S = parseFloat(document.getElementById('s-spot').value);
+  const ivPct = parseFloat(document.getElementById('s-iv').value);
+  const ratePct = parseFloat(document.getElementById('s-rate').value);
+  const expDate = document.getElementById('s-expDate').value;
+  const ticker = document.getElementById('s-ticker').value || '—';
+
+  if (!expDate || isNaN(S) || isNaN(ivPct)) { alert('参数不完整(包括到期日)'); return; }
+  const today = new Date(); today.setHours(0,0,0,0);
+  const exp = new Date(expDate); exp.setHours(0,0,0,0);
+  const dte = daysBetween(today, exp);
+  if (dte === 0) { alert('到期日必须在未来'); return; }
+  const T = dte / 365;
+  const sigma = ivPct / 100;
+  const r = ratePct / 100;
+
+  // 读取各腿
+  const legs = strat.legs.map((_, i) => {
+    const action = document.getElementById(`leg${i}-action`).value;
+    const type = document.getElementById(`leg${i}-type`).value;
+    const K = parseFloat(document.getElementById(`leg${i}-k`).value);
+    const qty = parseInt(document.getElementById(`leg${i}-qty`).value) || 1;
+    let prem = parseFloat(document.getElementById(`leg${i}-prem`).value);
+    const bs = blackScholes(S, K, T, r, sigma, type);
+    if (isNaN(prem)) prem = bs.price;
+    const sign = action === 'buy' ? 1 : -1;
+    return { action, type, K, qty, prem, bs, sign };
+  });
+
+  // 净付/净收 (正=付出,负=收到)
+  const netDebit = legs.reduce((s, l) => s + l.sign * l.prem * l.qty, 0);
+  // 组合希腊字母
+  const tDelta = legs.reduce((s,l) => s + l.sign * l.bs.delta * l.qty, 0);
+  const tGamma = legs.reduce((s,l) => s + l.sign * l.bs.gamma * l.qty, 0);
+  const tTheta = legs.reduce((s,l) => s + l.sign * l.bs.theta * l.qty, 0);
+  const tVega = legs.reduce((s,l) => s + l.sign * l.bs.vega * l.qty, 0);
+
+  // 到期 P&L 函数:每腿 sign*(intrinsic - prem)*qty
+  const intr = (s, type, K) => type==='call' ? Math.max(0, s-K) : Math.max(0, K-s);
+  const payoffAt = (s) => legs.reduce((sum, l) => sum + l.sign * (intr(s, l.type, l.K) - l.prem) * l.qty, 0);
+
+  // 扫描找最大利润/最大亏损/盈亏平衡点
+  const minS = Math.max(0.01, S * 0.4);
+  const maxS = S * 1.8;
+  const N = 400;
+  const step = (maxS - minS) / N;
+  let maxProfit = -Infinity, maxLoss = Infinity;
+  const breakevens = [];
+  let prev = null;
+  for (let i = 0; i <= N; i++) {
+    const s = minS + i * step;
+    const pl = payoffAt(s);
+    if (pl > maxProfit) maxProfit = pl;
+    if (pl < maxLoss) maxLoss = pl;
+    if (prev !== null) {
+      // 跨过零点
+      if ((prev.pl < 0 && pl > 0) || (prev.pl > 0 && pl < 0)) {
+        const t = -prev.pl / (pl - prev.pl);
+        breakevens.push(prev.s + t * step);
+      }
+    }
+    prev = { s, pl };
+  }
+  // 检查端点是否未封顶(裸买/裸卖等)
+  const leftEdgePL = payoffAt(minS);
+  const rightEdgePL = payoffAt(maxS);
+  let openLeft = false, openRight = false;
+  // 通过比较远端值,粗略判断是否无界
+  const leftFar = payoffAt(minS * 0.5);
+  const rightFar = payoffAt(maxS * 1.5);
+  if (Math.abs(leftFar - leftEdgePL) > 0.1) openLeft = true;
+  if (Math.abs(rightFar - rightEdgePL) > 0.1) openRight = true;
+  const profitUnbounded = (openLeft && leftFar > rightEdgePL && leftFar > 0) || (openRight && rightFar > leftEdgePL && rightFar > 0);
+  const lossUnbounded = (openLeft && leftFar < rightEdgePL && leftFar < 0) || (openRight && rightFar < leftEdgePL && rightFar < 0);
+
+  // R:R
+  let rr;
+  if (profitUnbounded) rr = '∞';
+  else if (Math.abs(maxLoss) < 0.01 || lossUnbounded) rr = '—';
+  else rr = (maxProfit / Math.abs(maxLoss)).toFixed(2);
+
+  // 各腿表
+  const legsRows = legs.map(l => `
+    <tr>
+      <td style="text-align:left;">${l.action==='buy'?'<span style="color:#0a7d3e;">买</span>':'<span style="color:#c41e3a;">卖</span>'} ${l.qty}×</td>
+      <td>${l.type.toUpperCase()} $${l.K}</td>
+      <td>$${l.prem.toFixed(2)}</td>
+      <td style="color:${l.sign>0?'#c41e3a':'#0a7d3e'};">${l.sign>0?'-':'+'}$${(l.prem*l.qty).toFixed(2)}</td>
+      <td>${l.bs.delta.toFixed(2)}</td>
+    </tr>
+  `).join('');
+
+  // 到期 P&L 表
+  const pricePoints = [-20, -15, -10, -5, 0, 5, 10, 15, 20].map(p => S * (1 + p/100));
+  let payoffRows = '';
+  pricePoints.forEach(s => {
+    const pl = payoffAt(s);
+    const cls = pl > 0.01 ? 'pnl-pos' : (pl < -0.01 ? 'pnl-neg' : '');
+    const movePct = ((s-S)/S*100);
+    payoffRows += `<tr>
+      <td style="text-align:left;">$${s.toFixed(0)} (${movePct>=0?'+':''}${movePct.toFixed(0)}%)</td>
+      <td class="${cls}">${pl>=0?'+':''}$${pl.toFixed(2)}</td>
+      <td class="${cls}">${pl>=0?'+':''}$${(pl*100).toFixed(0)}</td>
+    </tr>`;
+  });
+
+  // Delta/Theta/Vega 解读
+  let directionTxt = '';
+  if (Math.abs(tDelta) < 0.15) directionTxt = '<strong>方向中性</strong> · 主要赌波动率/时间';
+  else if (tDelta > 0) directionTxt = `<strong>看涨</strong>(净 Delta +${tDelta.toFixed(2)})`;
+  else directionTxt = `<strong>看跌</strong>(净 Delta ${tDelta.toFixed(2)})`;
+  let timeTxt = tTheta > 0 ? `<strong>时间是朋友</strong>(净 Theta +${tTheta.toFixed(2)}/天,卖方占优)`
+                            : `<strong>时间是敌人</strong>(净 Theta ${tTheta.toFixed(2)}/天,买方需在到期前兑现)`;
+  let volTxt = tVega > 0 ? `<strong>IV 上升盈利</strong>(净 Vega +${tVega.toFixed(2)},买方/跨式型)`
+                          : tVega < 0 ? `<strong>IV 下降盈利</strong>(净 Vega ${tVega.toFixed(2)},卖方/铁鹰型,怕事件)`
+                          : '<strong>对 IV 中性</strong>';
+
+  // 最大盈亏与盈亏平衡显示
+  const maxProfitDisp = profitUnbounded ? '∞' : `+$${maxProfit.toFixed(2)}`;
+  const maxLossDisp = lossUnbounded ? '-∞' : `$${maxLoss.toFixed(2)}`;
+  const maxProfitContract = profitUnbounded ? '理论无限' : `$${(maxProfit*100).toFixed(0)}/组合`;
+  const maxLossContract = lossUnbounded ? '理论无限' : `$${(maxLoss*100).toFixed(0)}/组合`;
+
+  document.getElementById('strategyResult').innerHTML = `
+    <div class="key-box">
+      <strong>${strat.name}</strong><br>
+      ${strat.desc}
+    </div>
+
+    <h3>各腿明细</h3>
+    <table>
+      <thead><tr><th style="text-align:left;">动作</th><th>合约</th><th>权利金</th><th>现金流</th><th>Δ</th></tr></thead>
+      <tbody>${legsRows}</tbody>
+    </table>
+    <div class="footnote">权利金留空时按 BS 公式 + 当前 IV 自动估算。现金流为 -付出 / +收入。</div>
+
+    <div class="stat-grid" style="margin-top:14px;">
+      <div class="stat ${netDebit>0?'red':'green'}">
+        <div class="label">${netDebit>0?'净付权利金 (Debit)':'净收权利金 (Credit)'}</div>
+        <div class="value">$${Math.abs(netDebit).toFixed(2)}</div>
+        <div class="small">$${(Math.abs(netDebit)*100).toFixed(0)}/组合</div>
+      </div>
+      <div class="stat green">
+        <div class="label">最大利润</div>
+        <div class="value">${maxProfitDisp}</div>
+        <div class="small">${maxProfitContract}</div>
+      </div>
+      <div class="stat red">
+        <div class="label">最大亏损</div>
+        <div class="value">${maxLossDisp}</div>
+        <div class="small">${maxLossContract}</div>
+      </div>
+      <div class="stat blue">
+        <div class="label">风险收益比 R:R</div>
+        <div class="value">${rr}</div>
+        <div class="small">${rr==='∞'?'无上限':(parseFloat(rr)>=1?'有利':'不利')}</div>
+      </div>
+    </div>
+
+    <div class="key-box">
+      <strong>盈亏平衡价(到期):</strong> ${breakevens.length>0 ? breakevens.map(b=>`$${b.toFixed(2)}`).join(' / ') : '无明确零点(始终单边盈/亏)'}
+    </div>
+
+    <h3>组合希腊字母</h3>
+    <div class="card" style="margin:0 0 12px 0; padding:14px; background:#f9f9fb; box-shadow:none;">
+      <div class="greeks-table">
+        <span class="greek-name">净 Delta</span>
+        <span class="greek-value">${tDelta.toFixed(3)}</span>
+        <span class="greek-name">净 Gamma</span>
+        <span class="greek-value">${tGamma.toFixed(4)}</span>
+        <span class="greek-name">净 Theta</span>
+        <span class="greek-value">${tTheta.toFixed(4)}/天</span>
+        <span class="greek-name">净 Vega</span>
+        <span class="greek-value">${tVega.toFixed(4)}</span>
+      </div>
+    </div>
+    <div class="footnote">
+      ${directionTxt}<br>
+      ${timeTxt}<br>
+      ${volTxt}
+    </div>
+
+    <h3>到期 P&L 分布</h3>
+    <table class="scenario-matrix">
+      <thead>
+        <tr>
+          <th style="text-align:left;">${ticker} 到期价</th>
+          <th>每股盈亏</th>
+          <th>每组合盈亏</th>
+        </tr>
+      </thead>
+      <tbody>${payoffRows}</tbody>
+    </table>
+
+    <div class="footnote">
+      * 一组合 = 各腿合约数按比例配齐(如蝶式 1-2-1,铁鹰 1-1-1-1)。<br>
+      * 仅按到期日内在价值算,中途平仓还有时间价值未释放。<br>
+      * 卖方/价差需要 margin,实际占用资金 ≠ 净付权利金。Debit Spread 占用 = 净付,Credit Spread 占用 ≈ 翼宽 - 净收。
+    </div>
+  `;
+}
 const STORAGE_KEY = 'options_positions_v2';
 const ACCOUNT_KEY = 'options_account_v1';
 
@@ -1147,11 +1543,13 @@ const today = new Date();
 const exitExp = new Date('2026-06-26');
 document.getElementById('expDate').value = '2026-06-26';
 document.getElementById('b-expDate').value = '2026-07-18';
+document.getElementById('s-expDate').value = '2026-07-18';
 
 const savedAccount = localStorage.getItem(ACCOUNT_KEY);
 if (savedAccount) document.getElementById('accountSize').value = savedAccount;
 
 renderPositions();
+renderLegs();
 calcBuy();
 calcExit();
 </script>

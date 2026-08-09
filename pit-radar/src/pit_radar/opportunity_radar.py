@@ -12,6 +12,8 @@ import pandas as pd
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
+from pit_radar.scoring import ratio as _safe_ratio
+
 
 NY_TZ = ZoneInfo("America/New_York")
 
@@ -768,9 +770,3 @@ def write_radar_outputs(
         "audit": audit_path,
         "model": model_path,
     }
-
-
-def _safe_ratio(numerator: pd.Series, denominator: pd.Series) -> pd.Series:
-    denominator = pd.to_numeric(denominator, errors="coerce")
-    numerator = pd.to_numeric(numerator, errors="coerce")
-    return numerator / denominator.where(denominator.abs() > 1e-12)

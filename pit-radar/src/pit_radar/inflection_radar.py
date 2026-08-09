@@ -10,7 +10,17 @@ import numpy as np
 import pandas as pd
 from sqlalchemy.engine import Engine
 
-from pit_radar import valuation_radar as valuation
+from pit_radar import scoring, valuation_radar as valuation
+from pit_radar.scoring import (
+    as_bool as _as_bool,
+    ensure_utc as _ensure_utc,
+    finite_float as _finite_float,
+    is_finite as _finite,
+    is_positive as _positive,
+    positive_ratio as _positive_ratio,
+    ratio as _ratio,
+    scaled_change as _scaled_change,
+)
 
 
 @dataclass(frozen=True)
@@ -350,7 +360,7 @@ def _score_inflection_radar(
             if column in {"cheapness_score", "own_history_discount_score"}:
                 output[rank_column] = pd.to_numeric(output[column], errors="coerce") / 100.0
             else:
-                output[rank_column] = valuation._sector_percentile(
+                output[rank_column] = scoring.sector_percentile(
                     output, column, higher_better, config.minimum_sector_size
                 )
             ranked.append(rank_column)
@@ -359,11 +369,11 @@ def _score_inflection_radar(
             ranked_frame.notna().sum(axis=1) >= minimum_component_features[component]
         )
 
-    output["raw_inflection_score"] = valuation._weighted_score(output, COMPONENT_WEIGHTS)
-    volatility_risk = valuation._sector_percentile(
+    output["raw_inflection_score"] = scoring.weighted_score(output, COMPONENT_WEIGHTS)
+    volatility_risk = scoring.sector_percentile(
         output, "volatility_20d", True, config.minimum_sector_size
     )
-    balance_risk = valuation._sector_percentile(
+    balance_risk = scoring.sector_percentile(
         output, "net_debt_to_operating_income", True, config.minimum_sector_size
     )
     risk_parts = pd.concat([volatility_risk, balance_risk], axis=1).mean(axis=1)
@@ -621,52 +631,3 @@ def _empty_evaluation(config: InflectionRadarConfig) -> dict[str, Any]:
             for horizon in config.forward_horizons
         }
     }
-
-
-def _ensure_utc(value: datetime) -> datetime:
-    if value.tzinfo is None:
-        return value.replace(tzinfo=UTC)
-    return value.astimezone(UTC)
-
-
-def _ratio(numerator: pd.Series, denominator: pd.Series) -> pd.Series:
-    numerator = pd.to_numeric(numerator, errors="coerce")
-    denominator = pd.to_numeric(denominator, errors="coerce").replace(0, np.nan)
-    return numerator / denominator
-
-
-def _positive_ratio(numerator: pd.Series, denominator: pd.Series) -> pd.Series:
-    result = _ratio(numerator, denominator)
-    return result.where((numerator > 0) & (denominator > 0))
-
-
-def _scaled_change(
-    current: pd.Series,
-    prior: pd.Series,
-    denominator_floor: float,
-) -> pd.Series:
-    current = pd.to_numeric(current, errors="coerce")
-    prior = pd.to_numeric(prior, errors="coerce")
-    denominator = prior.abs().clip(lower=denominator_floor)
-    return ((current - prior) / denominator).clip(-3.0, 3.0)
-
-
-def _positive(value: object) -> bool:
-    return _finite(value) and float(value) > 0
-
-
-def _finite(value: object) -> bool:
-    try:
-        return bool(pd.notna(value) and np.isfinite(float(value)))
-    except (TypeError, ValueError):
-        return False
-
-
-def _finite_float(value: object) -> float | None:
-    return float(value) if _finite(value) else None
-
-
-def _as_bool(values: pd.Series) -> pd.Series:
-    if values.dtype == bool:
-        return values
-    return values.astype(str).str.lower().isin({"true", "1", "yes"})

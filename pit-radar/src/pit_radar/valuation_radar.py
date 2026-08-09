@@ -11,6 +11,18 @@ import pandas as pd
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
+from pit_radar import scoring
+from pit_radar.scoring import (
+    ensure_utc as _ensure_utc,
+    global_percentile as _global_percentile,
+    mean_or_none as _mean_or_none,
+    positive_ratio as _positive_ratio,
+    ratio as _ratio,
+    sector_percentile as _sector_percentile,
+    top_components as _top_components,
+    weighted_score as _weighted_score,
+)
+
 
 @dataclass(frozen=True)
 class ValuationRadarConfig:
@@ -747,33 +759,6 @@ def _score_radar(frame: pd.DataFrame, config: ValuationRadarConfig) -> pd.DataFr
     return output
 
 
-def _sector_percentile(
-    frame: pd.DataFrame,
-    column: str,
-    higher_better: bool,
-    minimum_sector_size: int,
-) -> pd.Series:
-    values = pd.to_numeric(frame[column], errors="coerce").replace([np.inf, -np.inf], np.nan)
-    global_rank = _global_percentile(values, higher_better)
-    sector_rank = values.groupby(frame["sector"]).rank(pct=True, ascending=higher_better)
-    counts = values.notna().groupby(frame["sector"]).transform("sum")
-    return sector_rank.where(counts >= minimum_sector_size, global_rank)
-
-
-def _global_percentile(values: pd.Series, higher_better: bool) -> pd.Series:
-    return values.rank(pct=True, ascending=higher_better)
-
-
-def _weighted_score(frame: pd.DataFrame, weights: dict[str, float]) -> pd.Series:
-    numerator = pd.Series(0.0, index=frame.index)
-    denominator = pd.Series(0.0, index=frame.index)
-    for column, weight in weights.items():
-        available = frame[column].notna()
-        numerator += frame[column].fillna(0.0) * weight
-        denominator += available.astype(float) * weight
-    return numerator / denominator.where(denominator > 0)
-
-
 def _value_reason(row: pd.Series) -> str:
     components = {
         "同行估值较低": row.get("cheapness_score"),
@@ -802,11 +787,6 @@ def _overvaluation_reason(row: pd.Series) -> str:
     if row.get("value_trap_flag"):
         reasons.append("盈利与现金流同时为负")
     return "；".join(reasons[:4])
-
-
-def _top_components(components: dict[str, Any]) -> list[str]:
-    valid = [(name, float(value)) for name, value in components.items() if pd.notna(value)]
-    return [name for name, _ in sorted(valid, key=lambda item: item[1], reverse=True)[:3]]
 
 
 def select_watchlists(
@@ -1080,24 +1060,3 @@ def _audit_payload(
         ),
         "forward_horizons": list(config.forward_horizons),
     }
-
-
-def _positive_ratio(numerator: pd.Series, denominator: pd.Series) -> pd.Series:
-    ratio = _ratio(numerator, denominator)
-    return ratio.where((numerator > 0) & (denominator > 0))
-
-
-def _ratio(numerator: pd.Series, denominator: pd.Series) -> pd.Series:
-    numerator = pd.to_numeric(numerator, errors="coerce")
-    denominator = pd.to_numeric(denominator, errors="coerce")
-    return numerator / denominator.where(denominator.abs() > 1e-12)
-
-
-def _mean_or_none(values: list[float]) -> float | None:
-    return float(np.mean(values)) if values else None
-
-
-def _ensure_utc(value: datetime) -> datetime:
-    if value.tzinfo is None:
-        return value.replace(tzinfo=UTC)
-    return value.astimezone(UTC)

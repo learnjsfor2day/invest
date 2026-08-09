@@ -19,6 +19,12 @@
         "09:20"
       ]
     },
+    "com.aibao.pitradar.inflection-radar": {
+      "enabled": true,
+      "times": [
+        "10:45"
+      ]
+    },
     "com.aibao.pitradar.macro": {
       "enabled": true,
       "times": [

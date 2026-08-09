@@ -77,6 +77,40 @@ source /Users/aibao/invest/.venv/bin/activate
 python scripts/daily_fmp_batch.py --trade-date 2026-07-13 --tasks prices
 ```
 
+## 基本面拐点雷达
+
+`基本面拐点雷达`与原有预测次日开盘到收盘的实验性机会雷达相互独立。它面向
+20/60/120 个交易日的中期研究候选，使用透明的规则评分：
+
+- 盈利预期上修：30%
+- 基本面加速：25%
+- 价格与成交确认：20%
+- 估值空间：15%
+- 行业与评级催化：10%
+- 高波动、弱资产负债表和价值陷阱额外扣分
+
+生成当天候选榜：
+
+```bash
+cd /Users/aibao/invest/pit-radar
+DATABASE_URL='sqlite+pysqlite:///data/demo/pit_radar.sqlite' \
+  /Users/aibao/invest/.venv/bin/python scripts/build_inflection_watchlist.py
+```
+
+输出保存在 `data/inflection_radar/`。每次运行都会冻结一份历史评分截面；当未来
+20/60/120 个交易日成熟后，脚本自动计算股票收益、行业中性超额收益和候选命中率。
+Streamlit 的「基本面拐点雷达」页面读取最近一次结果。
+
+中期价格特征需要至少 120 个交易日历史。首次使用先回填核心池三年日线；命令支持
+断点续跑，已覆盖的股票会跳过：
+
+```bash
+python scripts/backfill_price_history.py --from-date 2023-01-01 --dry-run
+python scripts/backfill_price_history.py --from-date 2023-01-01
+```
+
+雷达在积累足够的成熟标签前固定标记为 `observation_only`，不输出买卖指令。
+
 `scripts/daily_fmp_batch.py` 默认读取 `data/universe/core_symbols.txt`；如果文件不存在，则退回 `.env` 的 `DEFAULT_SYMBOLS`。核心池文件一行一个 ticker。日常价格采集只拉这份核心池在指定交易日的一天日线，不做全美股全量，也默认不重复请求公司 profile，所以约等于每只股票 1 次 FMP 请求。
 
 北京 `2026-07-14` 跑美国 `2026-07-13` 数据时：
@@ -110,6 +144,7 @@ launchd/install_launchd_tasks.sh
 - `com.aibao.pitradar.earnings`：每天北京时间 08:10 和 22:10 自动跑 `scripts/run_earnings_events_once.sh`，根据财报日历找核心池里临近披露的公司，只对这些公司拉财报事件包。
 - `com.aibao.pitradar.universe`：每月 1 日和 15 日北京时间 08:30 自动跑 `scripts/run_universe_refresh_once.sh`，先刷新候选股票池，再生成 1500 支核心池并回填核心池公司基础信息。
 - `com.aibao.pitradar.valuation-radar`：每天北京时间 10:30 冻结价值低谷/高估风险观察仓和全市场 PIT 分数，持续积累 20/60 个交易日的前向标签。
+- `com.aibao.pitradar.inflection-radar`：每天北京时间 10:45 生成基本面拐点 Top20，冻结全市场评分并持续积累 20/60/120 个交易日的行业中性标签。
 
 也可以在 Streamlit 的「任务看板」->「任务设置」里开关任务、修改执行时间并同步到 launchd。配置文件是：
 

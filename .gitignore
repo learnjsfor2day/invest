@@ -1,0 +1,29 @@
+# secrets
+.env
+*.env.local
+fmp_api_smoke_test.py
+
+# generated data and runtime state
+data/
+logs/
+*.db
+*.sqlite
+*.sqlite3
+*.out
+*.pid
+*.status
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# OS / editors
+.codex/
+.DS_Store
+.idea/
+.vscode/

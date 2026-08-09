@@ -78,6 +78,7 @@ TASK_HISTORY_FILE = LOG_DIR / "task_runs.jsonl"
 TASK_SCHEDULE_FILE = PROJECT_ROOT / "config" / "task_schedule.json"
 TASK_SCHEDULE_SYNC_SCRIPT = PROJECT_ROOT / "scripts" / "sync_launchd_schedule.py"
 CORE_SYMBOLS_FILE = PROJECT_ROOT / "data" / "universe" / "core_symbols.txt"
+INFLECTION_RADAR_DIR = PROJECT_ROOT / "data" / "inflection_radar"
 
 SCHEDULED_TASKS = [
     {
@@ -133,6 +134,15 @@ SCHEDULED_TASKS = [
         "default_days": (1, 15),
         "status_patterns": ("universe_refresh.status", "universe_profile_backfill.status"),
         "log_patterns": ("universe_refresh_*.log", "universe_profile_backfill_*.log"),
+    },
+    {
+        "name": "基本面拐点雷达",
+        "label": "com.aibao.pitradar.inflection-radar",
+        "schedule": "每日 10:45 北京时间",
+        "default_times": ("10:45",),
+        "default_days": (),
+        "status_patterns": ("inflection_radar.status",),
+        "log_patterns": ("inflection_radar_*.log",),
     },
 ]
 
@@ -341,10 +351,24 @@ RUNTIME_OPTIMIZATION_ROWS = [
 def render() -> None:
     st.set_page_config(page_title="PIT Radar", layout="wide")
     st.title("美股 Point-in-Time 数据库")
-    page = st.sidebar.radio("页面", ["系统概览", "股票详情", "宏观日历", "任务看板", "数据架构", "PIT 时间回放", "数据字典"])
+    page = st.sidebar.radio(
+        "页面",
+        [
+            "系统概览",
+            "基本面拐点雷达",
+            "股票详情",
+            "宏观日历",
+            "任务看板",
+            "数据架构",
+            "PIT 时间回放",
+            "数据字典",
+        ],
+    )
 
     if page == "系统概览":
         _overview_page()
+    elif page == "基本面拐点雷达":
+        _inflection_radar_page()
     elif page == "股票详情":
         _stock_detail_page()
     elif page == "宏观日历":
@@ -368,6 +392,132 @@ def render() -> None:
             }
         )
         st.dataframe(dictionary_df, width="stretch", hide_index=True)
+
+
+def _inflection_radar_page() -> None:
+    st.subheader("基本面拐点雷达")
+    st.caption(
+        "寻找盈利预期上修、基本面加速、价格确认但仍有估值空间的中期研究候选。"
+        "当前只用于观察，不生成交易指令。"
+    )
+    watchlist_files = sorted(INFLECTION_RADAR_DIR.glob("inflection_watchlist_*.csv"))
+    if not watchlist_files:
+        st.info(
+            "尚未生成候选榜。运行："
+            "`python scripts/build_inflection_watchlist.py`"
+        )
+        return
+
+    watchlist_path = watchlist_files[-1]
+    signal_date = watchlist_path.stem.removeprefix("inflection_watchlist_")
+    report_path = INFLECTION_RADAR_DIR / f"inflection_report_{signal_date}.json"
+    watchlist = pd.read_csv(watchlist_path)
+    report = {}
+    if report_path.exists():
+        try:
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            report = {}
+    audit = report.get("audit", {}) if isinstance(report, dict) else {}
+
+    metric_cols = st.columns(4)
+    metric_cols[0].metric("信号日期", signal_date)
+    metric_cols[1].metric("候选数量", len(watchlist))
+    metric_cols[2].metric("可筛选股票", audit.get("eligible_symbols", "—"))
+    coverage = audit.get("median_data_coverage")
+    metric_cols[3].metric(
+        "中位数据覆盖",
+        f"{float(coverage):.0%}" if coverage is not None else "—",
+    )
+
+    history_days = audit.get("price_history_days_median")
+    if history_days is not None and float(history_days) < 60:
+        st.warning(
+            f"价格历史中位数目前只有 {float(history_days):.0f} 个交易日；"
+            "20/60/120日价格确认和前瞻回测仍需完成历史行情回填。"
+        )
+
+    display_columns = {
+        "watch_rank": "排名",
+        "symbol": "股票",
+        "company_name": "公司",
+        "sector": "行业",
+        "inflection_score": "拐点分",
+        "revision_score": "预期上修",
+        "fundamental_score": "基本面",
+        "confirmation_score": "价格确认",
+        "valuation_score": "估值空间",
+        "catalyst_score": "催化剂",
+        "risk_penalty": "风险扣分",
+        "inflection_data_coverage": "数据覆盖",
+        "q_eps_revision_20d": "EPS预期20日变化",
+        "q_revenue_revision_20d": "营收预期20日变化",
+        "sector_relative_return_20d": "20日行业超额",
+        "target_upside": "目标价空间",
+        "inflection_reason": "入选原因",
+    }
+    visible = [column for column in display_columns if column in watchlist]
+    table = watchlist[visible].rename(columns=display_columns)
+    for percent_column in (
+        "数据覆盖",
+        "EPS预期20日变化",
+        "营收预期20日变化",
+        "20日行业超额",
+        "目标价空间",
+    ):
+        if percent_column in table:
+            table[percent_column] = pd.to_numeric(table[percent_column], errors="coerce") * 100.0
+    st.dataframe(
+        table,
+        width="stretch",
+        hide_index=True,
+        column_config={
+            "拐点分": st.column_config.NumberColumn(format="%.1f"),
+            "预期上修": st.column_config.NumberColumn(format="%.1f"),
+            "基本面": st.column_config.NumberColumn(format="%.1f"),
+            "价格确认": st.column_config.NumberColumn(format="%.1f"),
+            "估值空间": st.column_config.NumberColumn(format="%.1f"),
+            "催化剂": st.column_config.NumberColumn(format="%.1f"),
+            "风险扣分": st.column_config.NumberColumn(format="%.1f"),
+            "数据覆盖": st.column_config.NumberColumn(format="%.0f%%"),
+            "EPS预期20日变化": st.column_config.NumberColumn(format="%.1f%%"),
+            "营收预期20日变化": st.column_config.NumberColumn(format="%.1f%%"),
+            "20日行业超额": st.column_config.NumberColumn(format="%.1f%%"),
+            "目标价空间": st.column_config.NumberColumn(format="%.1f%%"),
+            "入选原因": st.column_config.TextColumn(width="large"),
+        },
+    )
+
+    evaluation = report.get("forward_evaluation", {}).get("horizons", {})
+    if evaluation:
+        st.subheader("前瞻验证")
+        evaluation_rows = []
+        for horizon, values in evaluation.items():
+            evaluation_rows.append(
+                {
+                    "持有交易日": horizon,
+                    "成熟信号日": values.get("matured_signal_dates", 0),
+                    "候选平均收益": values.get("average_watchlist_return"),
+                    "行业超额收益": values.get("average_watchlist_excess_return"),
+                    "超额为正比例": values.get("positive_excess_hit_rate"),
+                    "状态": values.get("status"),
+                }
+            )
+        evaluation_frame = pd.DataFrame(evaluation_rows)
+        for percent_column in ("候选平均收益", "行业超额收益", "超额为正比例"):
+            evaluation_frame[percent_column] = pd.to_numeric(
+                evaluation_frame[percent_column], errors="coerce"
+            ) * 100.0
+        st.dataframe(
+            evaluation_frame,
+            width="stretch",
+            hide_index=True,
+            column_config={
+                "候选平均收益": st.column_config.NumberColumn(format="%.2f%%"),
+                "行业超额收益": st.column_config.NumberColumn(format="%.2f%%"),
+                "超额为正比例": st.column_config.NumberColumn(format="%.1f%%"),
+            },
+        )
 
 
 def _session():

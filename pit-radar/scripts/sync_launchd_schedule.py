@@ -72,6 +72,13 @@ TASK_DEFINITIONS = (
         "launchd_pitradar_valuation_radar.err",
         ("10:30",),
     ),
+    TaskDefinition(
+        "com.aibao.pitradar.inflection-radar",
+        "scripts/run_inflection_radar_once.sh",
+        "launchd_pitradar_inflection_radar.out",
+        "launchd_pitradar_inflection_radar.err",
+        ("10:45",),
+    ),
 )
 
 

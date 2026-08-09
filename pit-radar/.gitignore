@@ -10,6 +10,10 @@ __pycache__/
 data/raw/
 data/demo/
 data/exports/
+data/features/
+data/radar/
+data/valuation_radar/
+data/inflection_radar/
 data/universe/daily_symbols.txt
 data/universe/daily_universe.csv
 data/universe/daily_universe_rejected.csv

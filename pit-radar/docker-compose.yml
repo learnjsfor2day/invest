@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: pit-radar-postgres
+    environment:
+      POSTGRES_DB: pit_radar
+      POSTGRES_USER: pit_radar
+      POSTGRES_PASSWORD: pit_radar
+      TZ: UTC
+    ports:
+      - "5432:5432"
+    volumes:
+      - pit_radar_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pit_radar -d pit_radar"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  pit_radar_pgdata:

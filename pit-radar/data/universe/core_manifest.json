@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-08-01T00:30:18.397015+00:00",
+  "source": "data/universe/daily_universe.csv",
+  "input_count": 4239,
+  "eligible_count": 3412,
+  "core_count": 1500,
+  "rejected_count": 2739,
+  "criteria": {
+    "country": "US",
+    "exchanges": [
+      "NASDAQ",
+      "NYSE",
+      "AMEX"
+    ],
+    "min_price": "1",
+    "min_market_cap": "20000000",
+    "min_volume": "3000",
+    "min_dollar_volume": "20000",
+    "size": 1500
+  },
+  "outputs": {
+    "symbols": "data/universe/core_symbols.txt",
+    "core_csv": "data/universe/core_universe.csv",
+    "rejected_csv": "data/universe/core_universe_excluded.csv"
+  }
+}

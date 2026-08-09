@@ -1,8 +1,0 @@
-# All optional — pipeline degrades gracefully without them.
-# Core stdlib (sqlite3, urllib, csv, json, re) covers the no-key path.
-
-# Stock price reaction (free, no key)
-yfinance>=0.2.40
-
-# LLM transcript extraction (requires ANTHROPIC_API_KEY)
-anthropic>=0.30.0

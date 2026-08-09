@@ -1,0 +1,5 @@
+# One ticker per line. Production jobs read data/universe/core_symbols.txt by default.
+# Use this only as a small manual test list with --universe-file.
+MU
+AAPL
+NVDA

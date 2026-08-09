@@ -1,0 +1,54 @@
+{
+  "tasks": {
+    "com.aibao.pitradar.daily": {
+      "enabled": true,
+      "times": [
+        "07:30"
+      ]
+    },
+    "com.aibao.pitradar.earnings": {
+      "enabled": true,
+      "times": [
+        "08:10",
+        "22:10"
+      ]
+    },
+    "com.aibao.pitradar.estimates": {
+      "enabled": true,
+      "times": [
+        "09:20"
+      ]
+    },
+    "com.aibao.pitradar.macro": {
+      "enabled": true,
+      "times": [
+        "07:05",
+        "20:40",
+        "22:10"
+      ]
+    },
+    "com.aibao.pitradar.macro-reminder": {
+      "enabled": true,
+      "times": [
+        "07:20"
+      ]
+    },
+    "com.aibao.pitradar.universe": {
+      "days": [
+        1,
+        15
+      ],
+      "enabled": true,
+      "times": [
+        "08:30"
+      ]
+    },
+    "com.aibao.pitradar.valuation-radar": {
+      "enabled": true,
+      "times": [
+        "10:30"
+      ]
+    }
+  },
+  "timezone": "Asia/Shanghai"
+}
